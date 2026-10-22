@@ -1,0 +1,4 @@
+Perf | where TimeGenerated > ago(30m)
+| where Computer != "HV-HOST-01" and ObjectName == "LogicalDisk" and CounterName == "Avg. Disk sec/Transfer" and InstanceName != "_Total"
+| extend Volume=strcat(Computer," / ",InstanceName)
+| summarize LatencyMs=avg(CounterValue)*1000 by Volume,bin(TimeGenerated,1m)

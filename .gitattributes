@@ -1,0 +1,6 @@
+# The shift-report policy pins the SHA-256 of the exact bytes of several source files, so line endings must never
+# change between clones and operating systems.
+* text=auto eol=lf
+*.png binary
+*.pdf binary
+*.xlsx binary

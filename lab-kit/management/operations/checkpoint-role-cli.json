@@ -1,0 +1,21 @@
+{
+    "Actions":  [
+                    "Microsoft.Automation/automationAccounts/variables/read",
+                    "Microsoft.Automation/automationAccounts/variables/write"
+                ],
+    "Name":  "SQL Maintenance Run Checkpoints",
+    "Description":  "Maintenance-guard safeguard; assignable only within the lab resource group.",
+    "IsCustom":  true,
+    "NotDataActions":  [
+
+                       ],
+    "NotActions":  [
+
+                   ],
+    "DataActions":  [
+
+                    ],
+    "AssignableScopes":  [
+                             "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo"
+                         ]
+}

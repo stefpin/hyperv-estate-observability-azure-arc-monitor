@@ -1,0 +1,3 @@
+Perf | where TimeGenerated > ago(30m) and Computer == "HV-HOST-01"
+| where ObjectName == "Hyper-V Virtual Storage Device" and CounterName == "Latency" and InstanceName endswith ".vhdx"
+| summarize LatencyMs=avg(CounterValue)*1000 by InstanceName,bin(TimeGenerated,1m)

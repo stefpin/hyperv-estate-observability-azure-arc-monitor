@@ -1,0 +1,678 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "name": "intro",
+      "content": {
+        "json": "# Hyper-V and SQL estate report - v2.2\nHost plus five nested guests physically in the primary region. Original five Arc records: the primary region; SQL guest Arc/SQL services: Southeast Asia. SQL custom metrics: the primary region; Change Tracking: Southeast Asia. This is a demonstration lab, not a production architecture."
+      }
+    },
+    {
+      "type": 9,
+      "name": "time",
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "00000000-0000-0000-0000-000000000008",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "label": "Time range",
+            "type": 4,
+            "isRequired": true,
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 3600000
+                },
+                {
+                  "durationMs": 14400000
+                },
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 604800000
+                }
+              ],
+              "allowCustom": true
+            },
+            "value": {
+              "durationMs": 14400000
+            }
+          }
+        ],
+        "style": "pills"
+      }
+    },
+    {
+      "type": 3,
+      "name": "host-cpu",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Host hypervisor processor utilization (%)",
+        "query": "Perf | where TimeGenerated {TimeRange} and Computer == \"HV-HOST-01\"\n| where ObjectName == \"Hyper-V Hypervisor Logical Processor\" and CounterName == \"% Total Run Time\" and InstanceName == \"_Total\"\n| summarize CPU=avg(CounterValue) by bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "wait",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Per-guest scheduling wait (nanoseconds per dispatch, not CPU-ready %)",
+        "query": "Perf | where TimeGenerated {TimeRange} and Computer == \"HV-HOST-01\"\n| where ObjectName == \"Hyper-V Hypervisor Virtual Processor\" and CounterName == \"CPU Wait Time Per Dispatch\" and InstanceName contains \":\"\n| extend Guest=tostring(split(InstanceName,\":\")[0])\n| summarize WaitNs=avg(CounterValue) by Guest,bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "wait-summary",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Per-guest contention evidence",
+        "query": "Perf | where TimeGenerated {TimeRange} and Computer == \"HV-HOST-01\"\n| where ObjectName == \"Hyper-V Hypervisor Virtual Processor\" and CounterName == \"CPU Wait Time Per Dispatch\" and InstanceName contains \":\"\n| extend Guest=tostring(split(InstanceName,\":\")[0])\n| summarize MeanNs=round(avg(CounterValue)),P95Ns=round(percentile(CounterValue,95)),PeakNs=max(CounterValue) by Guest",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "table",
+        "timeContextFromParameter": "TimeRange"
+      }
+    },
+    {
+      "type": 3,
+      "name": "guest-cpu",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Guest-reported processor utilization (%)",
+        "query": "Perf | where TimeGenerated {TimeRange}\n| where ObjectName in (\"Processor Information\",\"Processor\") and CounterName == \"% Processor Time\" and InstanceName in (\"_Total\",\"total\")\n| summarize CPU=avg(CounterValue) by Computer,bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "cluster-cpu",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "WIN-CLUSTER-01 - three equal 4-vCPU Windows members (%)",
+        "query": "Perf | where TimeGenerated {TimeRange}\n| where Computer in (\"WIN2019-GUEST\",\"WIN2022-GUEST\",\"WIN2025-GUEST-01\")\n| where ObjectName == \"Processor Information\" and CounterName == \"% Processor Time\" and InstanceName == \"_Total\"\n| summarize MemberCPU=avg(CounterValue) by Computer,bin(TimeGenerated,{TimeRange:grain})\n| summarize ClusterCPU=avg(MemberCPU),BusiestMemberCPU=max(MemberCPU) by TimeGenerated",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "cluster-memory",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "WIN-CLUSTER-01 physical RAM in use (%) - not committed memory",
+        "query": "Perf | where TimeGenerated {TimeRange}\n| where Computer in (\"WIN2019-GUEST\",\"WIN2022-GUEST\",\"WIN2025-GUEST-01\")\n| where ObjectName == \"Memory\" and CounterName == \"Available Bytes\"\n| summarize UsedPercent=100.0*(1-avg(CounterValue)/8589934592.0) by Computer,bin(TimeGenerated,{TimeRange:grain})\n| summarize ClusterMemory=avg(UsedPercent),BusiestMemberMemory=max(UsedPercent) by TimeGenerated",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 1,
+      "name": "memory-intro",
+      "content": {
+        "json": "## SQL memory: allocated is not the same as executing-query use\nTotal Server Memory = SQL-manager committed memory. Total minus Free includes retained cache and internal allocations; it is NOT a universal active-workload metric. Query Used versus Granted below covers sort/hash workspace only. These categories overlap: do not sum them. The configured ceiling is not an allocation. SQL process memory can include allocations outside that ceiling."
+      }
+    },
+    {
+      "type": 3,
+      "name": "memory-cap",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Configured ceiling, SQL-manager committed and process footprint (MiB)",
+        "query": "HvSqlMemory_CL | where TimeGenerated {TimeRange}\n| summarize MaxMemoryMB=avg(MaxMemoryMB),CommittedMB=avg(TotalMemoryMB),ProcessMB=avg(ProcessMB) by bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "memory-breakdown",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "SQL-manager free, database cache and other/internal memory (MiB)",
+        "query": "HvSqlMemory_CL | where TimeGenerated {TimeRange}\n| summarize FreeMB=avg(FreeMemoryMB),CacheMB=avg(CacheMemoryMB),OtherInternalMB=avg(StolenMemoryMB),NonFreeCommittedMB=avg(TotalMemoryMB-FreeMemoryMB) by bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "query-grants",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Query workspace: peak granted and paired actual-use snapshot per time bucket (MiB)",
+        "query": "HvSqlMemory_CL | where TimeGenerated {TimeRange}\n| summarize arg_max(GrantAllocatedMB,GrantUsedMB) by bin(TimeGenerated,{TimeRange:grain})\n| project TimeGenerated,GrantedMB=GrantAllocatedMB,UsedMB=GrantUsedMB",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "memory-evidence",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Memory stages and observed allocation/use",
+        "query": "HvSqlMemory_CL | where TimeGenerated {TimeRange}\n| summarize Samples=count(),CommittedMB=round(avg(TotalMemoryMB),1),CacheMB=round(avg(CacheMemoryMB),1),GrantedMB=round(max(GrantAllocatedMB),1),UsedMB=round(max(GrantUsedMB),1),MinOSAvailableMB=round(min(OsAvailableMB),1),MaxPendingGrants=max(PendingGrants) by Stage\n| order by Stage asc",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "table",
+        "timeContextFromParameter": "TimeRange"
+      }
+    },
+    {
+      "type": 3,
+      "name": "memory-headroom",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "SQL guest OS headroom (MiB) and grant-pressure count",
+        "query": "HvSqlMemory_CL | where TimeGenerated {TimeRange}\n| summarize OSAvailableMB=avg(OsAvailableMB),PendingGrants=max(PendingGrants),GrantCount=max(GrantCount) by bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 1,
+      "name": "storage-intro",
+      "content": {
+        "json": "## Storage measurements by layer\nGuest volumes, Hyper-V virtual disks and host disks describe different layers. Do not add their IOPS together. Disk averages require meaningful I/O; a quiet zero-latency point does not prove storage is fast. Data and log VHDXs share the same host P20 backing disk, so they are separate logical volumes, not physically isolated storage."
+      }
+    },
+    {
+      "type": 3,
+      "name": "host-storage-iops",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Host disks read/write IOPS",
+        "query": "Perf | where TimeGenerated {TimeRange} and Computer == \"HV-HOST-01\"\n| where ObjectName == \"PhysicalDisk\" and CounterName in (\"Disk Reads/sec\",\"Disk Writes/sec\") and InstanceName != \"_Total\"\n| extend Series=strcat(InstanceName,\" / \",CounterName)\n| summarize IOPS=avg(CounterValue) by Series,bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "host-storage-latency",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Host disks read/write latency (ms)",
+        "query": "Perf | where TimeGenerated {TimeRange} and Computer == \"HV-HOST-01\"\n| where ObjectName == \"PhysicalDisk\" and CounterName in (\"Avg. Disk sec/Read\",\"Avg. Disk sec/Write\") and InstanceName != \"_Total\"\n| extend Series=strcat(InstanceName,\" / \",CounterName)\n| summarize LatencyMs=avg(CounterValue)*1000 by Series,bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "vhdx-latency",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Hyper-V virtual disk latency (ms)",
+        "query": "Perf | where TimeGenerated {TimeRange} and Computer == \"HV-HOST-01\"\n| where ObjectName == \"Hyper-V Virtual Storage Device\" and CounterName == \"Latency\" and InstanceName endswith \".vhdx\"\n| summarize LatencyMs=avg(CounterValue)*1000 by InstanceName,bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "vhdx-iops",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Hyper-V virtual disk read/write IOPS",
+        "query": "Perf | where TimeGenerated {TimeRange} and Computer == \"HV-HOST-01\"\n| where ObjectName == \"Hyper-V Virtual Storage Device\" and CounterName in (\"Read Operations/Sec\",\"Write Operations/Sec\") and InstanceName endswith \".vhdx\"\n| extend Series=strcat(InstanceName,\" / \",CounterName)\n| summarize IOPS=avg(CounterValue) by Series,bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "windows-latency",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Windows guest volume latency (ms)",
+        "query": "Perf | where TimeGenerated {TimeRange}\n| where Computer != \"HV-HOST-01\" and ObjectName == \"LogicalDisk\" and CounterName == \"Avg. Disk sec/Transfer\" and InstanceName != \"_Total\"\n| extend Volume=strcat(Computer,\" / \",InstanceName)\n| summarize LatencyMs=avg(CounterValue)*1000 by Volume,bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "windows-iops",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Windows guest volume IOPS",
+        "query": "Perf | where TimeGenerated {TimeRange}\n| where Computer != \"HV-HOST-01\" and ObjectName == \"LogicalDisk\" and CounterName == \"Disk Transfers/sec\" and InstanceName != \"_Total\"\n| extend Volume=strcat(Computer,\" / \",InstanceName)\n| summarize IOPS=avg(CounterValue) by Volume,bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "sql-counters",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "SQL memory counters independently collected by AMA",
+        "query": "Perf | where TimeGenerated {TimeRange} and Computer == \"SQL2019-GUEST\"\n| where ObjectName == \"SQLServer:Memory Manager\" and CounterName in (\"Total Server Memory (KB)\",\"Free Memory (KB)\",\"Database Cache Memory (KB)\",\"Stolen Server Memory (KB)\")\n| summarize MemoryMiB=avg(CounterValue)/1024 by CounterName,bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "sql-databases",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Live SQL database inventory (Arc ARM API)",
+        "query": "{\"version\": \"ARMEndpoint/1.0\", \"data\": null, \"headers\": [], \"method\": \"GET\", \"path\": \"/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.AzureArcData/SqlServerInstances/SQL2019-GUEST/databases?api-version=2023-09-01-preview\", \"urlParams\": [], \"batchDisabled\": false, \"transformers\": [{\"type\": \"jsonpath\", \"settings\": {\"tablePath\": \"$.value[*]\", \"columns\": [{\"path\": \"$.name\", \"columnid\": \"Database\"}, {\"path\": \"$.properties.state\", \"columnid\": \"State\"}, {\"path\": \"$.properties.sizeMB\", \"columnid\": \"SizeMB\"}, {\"path\": \"$.properties.compatibilityLevel\", \"columnid\": \"Compatibility\"}]}}]}",
+        "size": 0,
+        "queryType": 12,
+        "visualization": "table"
+      }
+    },
+    {
+      "type": 3,
+      "name": "arc",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Arc inventory and region/cluster membership",
+        "query": "resources | where type =~ \"microsoft.hybridcompute/machines\" and resourceGroup =~ \"rg-hyperv-arc-monitor-demo\"\n| project Machine=name,Region=location,Status=tostring(properties.status),Cluster=tostring(tags.cluster),OS=tostring(properties.osSku)",
+        "size": 0,
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>"
+        ],
+        "visualization": "table"
+      }
+    },
+    {
+      "type": 3,
+      "name": "heartbeat",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Reporting health - all six machines",
+        "query": "Heartbeat | where TimeGenerated {TimeRange}\n| summarize LastSeen=max(TimeGenerated),Samples=count() by Computer,OSType | order by Computer asc",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "table",
+        "timeContextFromParameter": "TimeRange"
+      }
+    },
+    {
+      "type": 1,
+      "name": "reporting",
+      "content": {
+        "json": "Export individual result tables using their Export to Excel menu; chart data can be opened as a table. The custom memory table is in law-arc-monitor-lab. Change Tracking has a separate Southeast Asia workspace. SQL's native Arc performance dashboard supplements this workbook; it uses its own telemetry pipeline, not this Log Analytics table."
+      }
+    },
+    {
+      "type": 3,
+      "name": "rhel-device-iops",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "RHEL block-device read/write IOPS (do not sum LVM aliases)",
+        "query": "HvLinuxDisk_CL | where TimeGenerated {TimeRange} and AccountingScope == 'block-device' | summarize ReadIOPS=avg(ReadIOPS),WriteIOPS=avg(WriteIOPS) by Device,bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "rhel-device-latency",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "RHEL operation-weighted read/write latency (ms; quiet direction is null)",
+        "query": "HvLinuxDisk_CL | where TimeGenerated {TimeRange} and AccountingScope == 'block-device' | extend ReadOps=ReadIOPS*IntervalSeconds,WriteOps=WriteIOPS*IntervalSeconds | summarize ReadOps=sum(ReadOps),WriteOps=sum(WriteOps),ReadWeighted=sum(ReadAwaitMs*ReadOps),WriteWeighted=sum(WriteAwaitMs*WriteOps) by Device,bin(TimeGenerated,{TimeRange:grain}) | extend ReadLatencyMs=iff(ReadOps>0,ReadWeighted/ReadOps,real(null)),WriteLatencyMs=iff(WriteOps>0,WriteWeighted/WriteOps,real(null)) | project TimeGenerated,Device,ReadLatencyMs,WriteLatencyMs",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "rhel-device-detail",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "RHEL storage device to mounted-volume mapping and latest measurements",
+        "query": "HvLinuxDisk_CL | where TimeGenerated {TimeRange} and AccountingScope == 'block-device' | summarize arg_max(TimeGenerated,*) by Computer,Device | project Computer,Device,MountedVolumes,ReadIOPS,WriteIOPS,ReadAwaitMs,WriteAwaitMs,AvgQueueDepth,UtilizationPct",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "table",
+        "timeContextFromParameter": "TimeRange"
+      }
+    },
+    {
+      "type": 3,
+      "name": "windows-guest-memory",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Windows physical memory in use per machine (%)",
+        "query": "let capacity=datatable(Computer:string,Bytes:real)['HV-HOST-01',68719476736.0,'SQL2019-GUEST',12884901888.0,'WIN2019-GUEST',8589934592.0,'WIN2022-GUEST',8589934592.0,'WIN2025-GUEST-01',8589934592.0]; Perf | where TimeGenerated {TimeRange} and ObjectName == 'Memory' and CounterName == 'Available Bytes' | summarize Available=avg(CounterValue) by Computer,bin(TimeGenerated,{TimeRange:grain}) | join kind=inner capacity on Computer | project TimeGenerated,Computer,UsedPercent=100.0*(1-Available/Bytes)",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "rhel-guest-memory",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "RHEL guest-reported used memory (%)",
+        "query": "Perf | where TimeGenerated {TimeRange} and Computer == 'RHEL94-GUEST' and ObjectName == 'Memory' and CounterName == '% Used Memory' | summarize UsedPercent=avg(CounterValue) by bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "cluster-contention",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "WIN-CLUSTER-01 scheduling wait per dispatch (nanoseconds)",
+        "query": "Perf | where TimeGenerated {TimeRange} and Computer == 'HV-HOST-01' and ObjectName == 'Hyper-V Hypervisor Virtual Processor' and CounterName == 'CPU Wait Time Per Dispatch' and InstanceName contains ':' | extend Guest=tostring(split(InstanceName,':')[0]) | where Guest in ('WIN2019-GUEST','WIN2022-GUEST','WIN2025-GUEST-01') | summarize MeanWaitNs=avg(CounterValue),P95WaitNs=percentile(CounterValue,95) by bin(TimeGenerated,{TimeRange:grain})",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        ],
+        "visualization": "timechart",
+        "timeContextFromParameter": "TimeRange",
+        "chartSettings": {
+          "showLegend": true,
+          "showMetrics": false
+        }
+      }
+    },
+    {
+      "type": 3,
+      "name": "ct-file-changes",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Change Tracking - real reversible file change (Southeast Asia workspace)",
+        "query": "ConfigurationChange | where TimeGenerated {TimeRange} and Computer == 'SQL2019-GUEST' | where FileSystemPath contains 'ChangeTracking-v22' | project TimeGenerated,Computer,ConfigChangeType,ChangeCategory,FileSystemPath,FieldsChanged,PreviousFileContentChecksum,FileContentChecksum | order by TimeGenerated desc",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-ct-sea"
+        ],
+        "visualization": "table",
+        "timeContextFromParameter": "TimeRange"
+      }
+    },
+    {
+      "type": 3,
+      "name": "ct-sql-services",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Change Tracking - latest SQL service inventory",
+        "query": "ConfigurationData | where TimeGenerated {TimeRange} and Computer == 'SQL2019-GUEST' and SvcName in ('MSSQLSERVER','SQLSERVERAGENT','SqlServerExtension') | summarize arg_max(TimeGenerated,*) by SvcName | project TimeGenerated,Computer,SvcName,SvcState,SvcStartupType,SvcAccount",
+        "size": 0,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-ct-sea"
+        ],
+        "visualization": "table",
+        "timeContextFromParameter": "TimeRange"
+      }
+    },
+    {
+      "type": 3,
+      "name": "update-assessment",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Update Manager - missing update inventory (SQL Arc guest only)",
+        "query": "patchassessmentresources | where resourceGroup =~ 'rg-hyperv-arc-monitor-demo' and type contains 'softwarepatches' | extend Machine=tostring(split(id,'/')[8]) | where Machine =~ 'SQL2019-GUEST' | project Machine,Patch=tostring(properties.patchName),KB=tostring(properties.kbId),Classification=properties.classifications,RebootBehavior=tostring(properties.rebootBehavior)",
+        "size": 0,
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>"
+        ],
+        "visualization": "table"
+      }
+    },
+    {
+      "type": 3,
+      "name": "update-history",
+      "content": {
+        "version": "KqlItem/1.0",
+        "title": "Update Manager - actual installation history (not a scheduled-run claim)",
+        "query": "patchinstallationresources | where resourceGroup =~ 'rg-hyperv-arc-monitor-demo' and type !contains 'softwarepatches' | extend Machine=tostring(split(id,'/')[8]) | where Machine =~ 'SQL2019-GUEST' | project Machine,Status=tostring(properties.status),Installed=toint(properties.installedPatchCount),Failed=toint(properties.failedPatchCount),Excluded=toint(properties.excludedPatchCount),RebootStatus=tostring(properties.rebootStatus),Updated=todatetime(properties.lastModifiedDateTime)",
+        "size": 0,
+        "queryType": 1,
+        "resourceType": "microsoft.resourcegraph/resources",
+        "crossComponentResources": [
+          "/subscriptions/<SUBSCRIPTION_ID>"
+        ],
+        "visualization": "table"
+      }
+    }
+  ],
+  "fallbackResourceIds": [
+    "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+  ],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}

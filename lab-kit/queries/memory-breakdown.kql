@@ -1,0 +1,2 @@
+HvSqlMemory_CL | where TimeGenerated > ago(30m)
+| summarize FreeMB=avg(FreeMemoryMB),CacheMB=avg(CacheMemoryMB),OtherInternalMB=avg(StolenMemoryMB),NonFreeCommittedMB=avg(TotalMemoryMB-FreeMemoryMB) by bin(TimeGenerated,1m)

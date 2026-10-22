@@ -1,0 +1,1 @@
+ConfigurationData | where TimeGenerated > ago(30m) and Computer == 'SQL2019-GUEST' and SvcName in ('MSSQLSERVER','SQLSERVERAGENT','SqlServerExtension') | summarize arg_max(TimeGenerated,*) by SvcName | project TimeGenerated,Computer,SvcName,SvcState,SvcStartupType,SvcAccount

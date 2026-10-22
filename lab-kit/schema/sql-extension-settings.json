@@ -1,0 +1,7 @@
+{
+  "SqlManagement": {
+    "IsEnabled": true
+  },
+  "LicenseType": "PAYG",
+  "ExcludedSqlInstances": []
+}

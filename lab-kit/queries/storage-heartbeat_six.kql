@@ -1,0 +1,1 @@
+Heartbeat | where TimeGenerated > ago(10m) | where _ResourceId has '/resourcegroups/rg-hyperv-arc-monitor-demo/' | summarize Latest=max(TimeGenerated), SecondsOld=datetime_diff('second',now(),max(TimeGenerated)) by Computer

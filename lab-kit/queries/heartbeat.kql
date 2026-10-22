@@ -1,0 +1,6 @@
+Heartbeat
+| where TimeGenerated > ago(30m)
+| where _ResourceId contains "/resourceGroups/rg-hyperv-arc-monitor-demo/"
+| summarize LastSeen=max(TimeGenerated), Environment=any(ComputerEnvironment) by Computer,_ResourceId
+| extend AgeMinutes=datetime_diff("minute",now(),LastSeen)
+| order by Computer asc

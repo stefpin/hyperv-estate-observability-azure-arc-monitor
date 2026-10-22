@@ -1,0 +1,97 @@
+{
+  "properties": {
+    "dataFlows": [
+      {
+        "destinations": [
+          "law-arc-monitor-lab"
+        ],
+        "streams": [
+          "Microsoft-Perf",
+          "Microsoft-Event"
+        ]
+      }
+    ],
+    "dataSources": {
+      "performanceCounters": [
+        {
+          "counterSpecifiers": [
+            "\\Processor Information(_Total)\\% Processor Time",
+            "\\Processor Information(_Total)\\% Privileged Time",
+            "\\Processor Information(_Total)\\% User Time",
+            "\\Processor Information(_Total)\\Processor Frequency",
+            "\\System\\Processes",
+            "\\Process(_Total)\\Thread Count",
+            "\\Process(_Total)\\Handle Count",
+            "\\System\\System Up Time",
+            "\\System\\Context Switches/sec",
+            "\\System\\Processor Queue Length",
+            "\\Memory\\% Committed Bytes In Use",
+            "\\Memory\\Available Bytes",
+            "\\Memory\\Committed Bytes",
+            "\\Memory\\Cache Bytes",
+            "\\Memory\\Pool Paged Bytes",
+            "\\Memory\\Pool Nonpaged Bytes",
+            "\\Memory\\Pages/sec",
+            "\\Memory\\Page Faults/sec",
+            "\\Process(_Total)\\Working Set",
+            "\\Process(_Total)\\Working Set - Private",
+            "\\LogicalDisk(*)\\% Disk Time",
+            "\\LogicalDisk(*)\\% Disk Read Time",
+            "\\LogicalDisk(*)\\% Disk Write Time",
+            "\\LogicalDisk(*)\\% Idle Time",
+            "\\LogicalDisk(*)\\Disk Bytes/sec",
+            "\\LogicalDisk(*)\\Disk Read Bytes/sec",
+            "\\LogicalDisk(*)\\Disk Write Bytes/sec",
+            "\\LogicalDisk(*)\\Disk Transfers/sec",
+            "\\LogicalDisk(*)\\Disk Reads/sec",
+            "\\LogicalDisk(*)\\Disk Writes/sec",
+            "\\LogicalDisk(*)\\Avg. Disk sec/Transfer",
+            "\\LogicalDisk(*)\\Avg. Disk sec/Read",
+            "\\LogicalDisk(*)\\Avg. Disk sec/Write",
+            "\\LogicalDisk(*)\\Avg. Disk Queue Length",
+            "\\LogicalDisk(*)\\Avg. Disk Read Queue Length",
+            "\\LogicalDisk(*)\\Avg. Disk Write Queue Length",
+            "\\LogicalDisk(*)\\% Free Space",
+            "\\LogicalDisk(*)\\Free Megabytes",
+            "\\Network Interface(*)\\Bytes Total/sec",
+            "\\Network Interface(*)\\Bytes Sent/sec",
+            "\\Network Interface(*)\\Bytes Received/sec",
+            "\\Network Interface(*)\\Packets/sec",
+            "\\Network Interface(*)\\Packets Sent/sec",
+            "\\Network Interface(*)\\Packets Received/sec",
+            "\\Network Interface(*)\\Packets Outbound Errors",
+            "\\Network Interface(*)\\Packets Received Errors"
+          ],
+          "name": "perfCountersWindows",
+          "samplingFrequencyInSeconds": 60,
+          "streams": [
+            "Microsoft-Perf"
+          ]
+        }
+      ],
+      "windowsEventLogs": [
+        {
+          "name": "eventLogsWindows",
+          "streams": [
+            "Microsoft-Event"
+          ],
+          "xPathQueries": [
+            "System!*[System[(Level=1 or Level=2 or Level=3)]]",
+            "Application!*[System[(Level=1 or Level=2 or Level=3)]]",
+            "System!*[System[Provider[@Name='Service Control Manager'] and (EventID=7036 or EventID=7031 or EventID=7034)]]"
+          ]
+        }
+      ]
+    },
+    "destinations": {
+      "logAnalytics": [
+        {
+          "name": "law-arc-monitor-lab",
+          "workspaceResourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        }
+      ]
+    }
+  },
+  "location": "<PRIMARY_REGION>",
+  "kind": "Windows"
+}

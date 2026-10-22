@@ -1,0 +1,1 @@
+HvLinuxDisk_CL | where TimeGenerated > ago(30m) | summarize Records=count() by Computer,Device,TimeGenerated | where Records>1

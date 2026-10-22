@@ -1,0 +1,91 @@
+{
+  "properties": {
+    "description": "SQL2019-GUEST dedicated CT AMA rule; no changes to shared perf DCRs.",
+    "dataSources": {
+      "extensions": [
+        {
+          "streams": [
+            "Microsoft-ConfigurationChange",
+            "Microsoft-ConfigurationChangeV2",
+            "Microsoft-ConfigurationData"
+          ],
+          "extensionName": "ChangeTracking-Windows",
+          "extensionSettings": {
+            "enableFiles": true,
+            "enableSoftware": true,
+            "enableRegistry": true,
+            "enableServices": true,
+            "enableInventory": true,
+            "registrySettings": {
+              "registryCollectionFrequency": 3000,
+              "registryInfo": [
+                {
+                  "name": "HV-Demo-Registry",
+                  "groupTag": "HV-Demo",
+                  "description": "Harmless dedicated demo key; no SQL settings",
+                  "recurse": false,
+                  "keyName": "HKEY_LOCAL_MACHINE\\SOFTWARE\\HV-Demo\\ChangeTracking-v22",
+                  "valueName": "DemoState",
+                  "enabled": true
+                }
+              ]
+            },
+            "fileSettings": {
+              "fileCollectionFrequency": 1800,
+              "fileInfo": [
+                {
+                  "maxOutputSize": 500000,
+                  "description": "Harmless demo fixture only",
+                  "enabled": true,
+                  "maxContentsReturnable": 500000,
+                  "groupTag": "HV-Demo",
+                  "type": "File",
+                  "name": "HV-Demo-File",
+                  "links": "Follow",
+                  "path": "C:\\HV-Demo\\ChangeTracking-v22\\fixture-demo.txt",
+                  "pathType": "File",
+                  "recurse": false
+                }
+              ]
+            },
+            "softwareSettings": {
+              "softwareCollectionFrequency": 1800
+            },
+            "inventorySettings": {
+              "inventoryCollectionFrequency": 36000
+            },
+            "servicesSettings": {
+              "serviceCollectionFrequency": 600
+            }
+          },
+          "name": "CTDataSource-Windows"
+        }
+      ]
+    },
+    "dataFlows": [
+      {
+        "destinations": [
+          "Microsoft-CT-Dest"
+        ],
+        "streams": [
+          "Microsoft-ConfigurationChange",
+          "Microsoft-ConfigurationChangeV2",
+          "Microsoft-ConfigurationData"
+        ]
+      }
+    ],
+    "destinations": {
+      "logAnalytics": [
+        {
+          "name": "Microsoft-CT-Dest",
+          "workspaceResourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-ct-sea"
+        }
+      ]
+    }
+  },
+  "tags": {
+    "purpose": "HV-demo-ChangeTracking"
+  },
+  "location": "southeastasia",
+  "kind": "Windows"
+}

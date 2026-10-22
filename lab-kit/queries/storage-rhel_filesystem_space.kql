@@ -1,0 +1,1 @@
+Perf | where TimeGenerated > ago(30m) | where Computer == 'RHEL94-GUEST' and ObjectName == 'Logical Disk' | where CounterName in ('% Free Space','Free Megabytes','% Used Space','% Free Inodes','% Used Inodes') | summarize Value=avg(CounterValue), Latest=max(TimeGenerated) by InstanceName, CounterName

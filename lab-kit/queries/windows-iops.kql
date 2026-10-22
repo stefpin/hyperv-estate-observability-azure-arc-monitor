@@ -1,0 +1,4 @@
+Perf | where TimeGenerated > ago(30m)
+| where Computer != "HV-HOST-01" and ObjectName == "LogicalDisk" and CounterName == "Disk Transfers/sec" and InstanceName != "_Total"
+| extend Volume=strcat(Computer," / ",InstanceName)
+| summarize IOPS=avg(CounterValue) by Volume,bin(TimeGenerated,1m)

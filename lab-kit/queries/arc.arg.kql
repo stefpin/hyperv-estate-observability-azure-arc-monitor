@@ -1,0 +1,2 @@
+resources | where type =~ "microsoft.hybridcompute/machines" and resourceGroup =~ "rg-hyperv-arc-monitor-demo"
+| project Machine=name,Region=location,Status=tostring(properties.status),Cluster=tostring(tags.cluster),OS=tostring(properties.osSku)

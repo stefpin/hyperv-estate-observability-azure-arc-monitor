@@ -1,0 +1,31 @@
+{
+    "properties":  {
+                       "maintenanceConfigurationId":  "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.Maintenance/maintenanceConfigurations/mc-hv-sql2019-definitions-gated",
+                       "filter":  {
+                                      "osTypes":  [
+                                                      "Windows"
+                                                  ],
+                                      "resourceGroups":  [
+
+                                                         ],
+                                      "resourceTypes":  [
+                                                            "Microsoft.HybridCompute/machines"
+                                                        ],
+                                      "tagSettings":  {
+                                                          "tags":  {
+                                                                       "HvUmApproval":  [
+                                                                                             "Approved"
+                                                                                         ],
+                                                                       "HvUmTarget":  [
+                                                                                           "SQL2019-GUEST"
+                                                                                       ]
+                                                                   },
+                                                          "filterOperator":  "All"
+                                                      },
+                                      "locations":  [
+                                                        "southeastasia"
+                                                    ]
+                                  }
+                   },
+    "location":  "<PRIMARY_REGION>"
+}

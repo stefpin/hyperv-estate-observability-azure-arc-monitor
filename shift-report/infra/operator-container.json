@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "apiVersion": "2025-09-01",
+      "name": "ci-hv-shift-operator-<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "tags": {
+        "purpose": "hv-shift-private-operator",
+        "execution-limit": "3600-seconds-no-restart"
+      },
+      "properties": {
+        "osType": "Linux",
+        "restartPolicy": "Never",
+        "subnetIds": [
+          {
+            "id": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.Network/virtualNetworks/vnet-hv-shift-<SUFFIX>/subnets/snet-operator"
+          }
+        ],
+        "dnsConfig": {
+          "nameServers": [
+            "168.63.129.16"
+          ]
+        },
+        "containers": [
+          {
+            "name": "operator",
+            "properties": {
+              "image": "mcr.microsoft.com/azure-cli@sha256:933eb8dcb81aecb6f77e03c5b8660f0a1dfa9e1d16525763a27f86ff3b83a044",
+              "command": [
+                "/bin/sh",
+                "-c",
+                "sleep 3600"
+              ],
+              "resources": {
+                "requests": {
+                  "cpu": 1,
+                  "memoryInGB": 1
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

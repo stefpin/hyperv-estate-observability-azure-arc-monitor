@@ -1,0 +1,506 @@
+{
+    "ConfigurationChange":  [
+                                {
+                                    "name":  "Computer",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "ConfigChangeType",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "ChangeCategory",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SourceComputerId",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SoftwareType",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SoftwareName",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "Previous",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "Current",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "Publisher",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "Location",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SoftwareDescription",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcChangeType",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcDisplayName",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcName",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcState",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcPreviousState",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcStartupType",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcPreviousStartupType",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcAccount",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcPreviousAccount",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcRunlevels",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcPreviousRunlevels",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcController",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcPreviousController",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcPath",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SvcPreviousPath",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "RegistryKey",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "Hive",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "ValueName",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "ValueData",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "PreviousValueData",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "ValueType",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "PreviousValueType",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "Name",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "FileSystemPath",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "Size",
+                                    "type":  "long",
+                                    "clrType":  "System.Int64"
+                                },
+                                {
+                                    "name":  "PreviousSize",
+                                    "type":  "long",
+                                    "clrType":  "System.Int64"
+                                },
+                                {
+                                    "name":  "DateCreated",
+                                    "type":  "datetime",
+                                    "clrType":  "System.DateTime"
+                                },
+                                {
+                                    "name":  "PreviousDateCreated",
+                                    "type":  "datetime",
+                                    "clrType":  "System.DateTime"
+                                },
+                                {
+                                    "name":  "DateModified",
+                                    "type":  "datetime",
+                                    "clrType":  "System.DateTime"
+                                },
+                                {
+                                    "name":  "PreviousDateModified",
+                                    "type":  "datetime",
+                                    "clrType":  "System.DateTime"
+                                },
+                                {
+                                    "name":  "Attributes",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "PreviousAttributes",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "Acls",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "PreviousAcls",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "FieldsChanged",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "FileContentBlobLink",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "PreviousFileContentBlobLink",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "FileContentChecksum",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "PreviousFileContentChecksum",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "SourceSystem",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "MG",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "ManagementGroupName",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "TenantId",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "TimeGenerated",
+                                    "type":  "datetime",
+                                    "clrType":  "System.DateTime"
+                                },
+                                {
+                                    "name":  "VMUUID",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "LastSnapshotAge",
+                                    "type":  "long",
+                                    "clrType":  "System.Int64"
+                                },
+                                {
+                                    "name":  "Type",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                },
+                                {
+                                    "name":  "_ResourceId",
+                                    "type":  "string",
+                                    "clrType":  "System.String"
+                                }
+                            ],
+    "ConfigurationData":  [
+                              {
+                                  "name":  "Computer",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "ConfigDataType",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "SourceComputerId",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "SoftwareType",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "SoftwareName",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "Publisher",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "CurrentVersion",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "Architecture",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "Location",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "SoftwareDescription",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "SourceSystem",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "MG",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "ManagementGroupName",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "TenantId",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "TimeGenerated",
+                                  "type":  "datetime",
+                                  "clrType":  "System.DateTime"
+                              },
+                              {
+                                  "name":  "VMUUID",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "SvcDisplayName",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "SvcName",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "SvcState",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "SvcStartupType",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "SvcAccount",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "SvcRunlevels",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "SvcController",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "SvcPath",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "SvcDescription",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "RegistryKey",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "Hive",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "ValueName",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "ValueData",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "ValueType",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "Name",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "FileSystemPath",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "Size",
+                                  "type":  "long",
+                                  "clrType":  "System.Int64"
+                              },
+                              {
+                                  "name":  "DateCreated",
+                                  "type":  "datetime",
+                                  "clrType":  "System.DateTime"
+                              },
+                              {
+                                  "name":  "DateModified",
+                                  "type":  "datetime",
+                                  "clrType":  "System.DateTime"
+                              },
+                              {
+                                  "name":  "Attributes",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "Acls",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "FileContentBlobLink",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "FileContentChecksum",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "Type",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              },
+                              {
+                                  "name":  "_ResourceId",
+                                  "type":  "string",
+                                  "clrType":  "System.String"
+                              }
+                          ]
+}

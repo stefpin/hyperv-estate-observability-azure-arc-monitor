@@ -1,0 +1,43 @@
+{
+  "properties": {
+    "windowSize": "PT10M",
+    "autoMitigate": true,
+    "description": "Demo: operational starting threshold. Notifications are attached separately (see docs/setup/19-alerts.md).",
+    "enabled": true,
+    "severity": 2,
+    "scopes": [
+      "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+    ],
+    "criteria": {
+      "allOf": [
+        {
+          "timeAggregation": "Average",
+          "threshold": 80,
+          "failingPeriods": {
+            "minFailingPeriodsToAlert": 1,
+            "numberOfEvaluationPeriods": 1
+          },
+          "dimensions": [
+            {
+              "operator": "Include",
+              "name": "Computer",
+              "values": [
+                "*"
+              ]
+            }
+          ],
+          "operator": "GreaterThan",
+          "metricMeasureColumn": "Value",
+          "query": "Perf | where ObjectName in (\"Processor Information\",\"Processor\") and CounterName == \"% Processor Time\" and InstanceName in (\"_Total\",\"total\") | summarize Value=avg(CounterValue) by Computer"
+        }
+      ]
+    },
+    "actions": {
+      "actionGroups": []
+    },
+    "evaluationFrequency": "PT5M",
+    "displayName": "hv-guest-cpu-high"
+  },
+  "location": "<PRIMARY_REGION>",
+  "name": "hv-guest-cpu-high"
+}

@@ -1,0 +1,21 @@
+{
+  "motto": "Host-to-SQL observability",
+  "statement": "Monitored with Azure Monitor",
+  "note": "Neutral placeholder marks generated for this repository. Replace them with your own approved images, then re-pin the policy (tools/pin_policy.py).",
+  "assets": [
+    {
+      "name": "brand-primary.png",
+      "contentId": "brand-primary",
+      "contentType": "image/png",
+      "size": 1453,
+      "sha256": "80d3dfb5ff1c91cff2157f280a02cd345bb992b060c82630c07a7e0e0d23aa46"
+    },
+    {
+      "name": "brand-secondary.png",
+      "contentId": "brand-secondary",
+      "contentType": "image/png",
+      "size": 2217,
+      "sha256": "0e8ec862eec9983870cf8352ac5166b063a8316b1571944b2a9f76e475919a0d"
+    }
+  ]
+}

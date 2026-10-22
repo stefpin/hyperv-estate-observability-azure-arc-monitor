@@ -1,0 +1,27 @@
+# Template of the private, git-ignored ENVIRONMENT.txt (repository root).
+#
+# Do not copy this file and type real passwords into it. Run  lab-kit\Initialize-LabSecrets.ps1  instead:
+# it prompts for every secret (input is not echoed), writes ENVIRONMENT.txt with owner-only permissions and never
+# overwrites an existing file. Edit the non-secret values in that script first (or replace the placeholders with
+# tools\Set-RepoContext.ps1).
+#
+# Non-secret settings
+SUBSCRIPTION_ID=<SUBSCRIPTION_ID>
+TENANT_ID=<TENANT_ID>
+RESOURCE_GROUP=rg-hyperv-arc-monitor-demo
+LOCATION=<PRIMARY_REGION>
+HOST_NAME=HV-HOST-01
+HOST_IMAGE=MicrosoftWindowsServer:WindowsServer:2025-datacenter-g2:latest
+HOST_ADMIN_USER=labadmin
+SQL_GUEST_NAME=SQL2019-GUEST
+SQL_GUEST_IP=192.168.100.15
+SQL_GUEST_ARC_LOCATION=southeastasia
+SQL_KEEP_RUNNING=true
+#
+# Secrets prompted by Initialize-LabSecrets.ps1 (never commit, never paste into chat, tickets or screenshots):
+#   HOST_ADMIN_PASSWORD, WIN2019_GUEST_PASSWORD, WIN2022_GUEST_PASSWORD, WIN2025_GUEST_PASSWORD,
+#   RHEL_GUEST_PASSWORD, SQL_GUEST_PASSWORD, SQL_COLLECTOR_PASSWORD
+#
+# Keys appended automatically by later scripts:
+#   SQL_COLLECTOR_USER (sources\demo-v22\install-memory.ps1)
+#   HV_UM_Pre_WEBHOOK_URI, HV_UM_Post_WEBHOOK_URI (management\provision-events.ps1 - webhook URLs are secrets)

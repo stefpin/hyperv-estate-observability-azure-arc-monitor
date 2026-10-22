@@ -1,0 +1,44 @@
+{
+  "properties": {
+    "windowSize": "PT10M",
+    "autoMitigate": true,
+    "description": "Demo: operational starting threshold. Notifications are attached separately (see docs/setup/19-alerts.md).",
+    "enabled": true,
+    "overrideQueryTimeRange": "P1D",
+    "severity": 2,
+    "scopes": [
+      "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+    ],
+    "criteria": {
+      "allOf": [
+        {
+          "timeAggregation": "Average",
+          "threshold": 10,
+          "failingPeriods": {
+            "minFailingPeriodsToAlert": 1,
+            "numberOfEvaluationPeriods": 1
+          },
+          "dimensions": [
+            {
+              "operator": "Include",
+              "name": "Computer",
+              "values": [
+                "*"
+              ]
+            }
+          ],
+          "operator": "GreaterThan",
+          "metricMeasureColumn": "Value",
+          "query": "let expected=datatable(Computer:string)[\"HV-HOST-01\",\"SQL2019-GUEST\",\"WIN2019-GUEST\",\"WIN2022-GUEST\",\"WIN2025-GUEST-01\",\"RHEL94-GUEST\"];\r\nlet lastbeats=Heartbeat | summarize Seen=max(TimeGenerated) by Computer;\r\nexpected | join kind=leftouter lastbeats on Computer | project Computer,Value=iff(isnull(Seen),1440.0,todouble(datetime_diff('second',now(),Seen))/60.0)"
+        }
+      ]
+    },
+    "actions": {
+      "actionGroups": []
+    },
+    "evaluationFrequency": "PT5M",
+    "displayName": "hv-heartbeat-missing"
+  },
+  "location": "<PRIMARY_REGION>",
+  "name": "hv-heartbeat-missing"
+}

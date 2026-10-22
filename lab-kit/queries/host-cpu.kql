@@ -1,0 +1,3 @@
+Perf | where TimeGenerated > ago(30m) and Computer == "HV-HOST-01"
+| where ObjectName == "Hyper-V Hypervisor Logical Processor" and CounterName == "% Total Run Time" and InstanceName == "_Total"
+| summarize CPU=avg(CounterValue) by bin(TimeGenerated,1m)

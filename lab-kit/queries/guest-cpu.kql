@@ -1,0 +1,3 @@
+Perf | where TimeGenerated > ago(30m)
+| where ObjectName in ("Processor Information","Processor") and CounterName == "% Processor Time" and InstanceName in ("_Total","total")
+| summarize CPU=avg(CounterValue) by Computer,bin(TimeGenerated,1m)

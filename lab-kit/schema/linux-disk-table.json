@@ -1,0 +1,70 @@
+{
+    "properties":  {
+                       "schema":  {
+                                      "name":  "HvLinuxDisk_CL",
+                                      "columns":  [
+                                                      {
+                                                          "name":  "TimeGenerated",
+                                                          "type":  "datetime"
+                                                      },
+                                                      {
+                                                          "name":  "Computer",
+                                                          "type":  "string"
+                                                      },
+                                                      {
+                                                          "name":  "Device",
+                                                          "type":  "string"
+                                                      },
+                                                      {
+                                                          "name":  "AccountingScope",
+                                                          "type":  "string"
+                                                      },
+                                                      {
+                                                          "name":  "ReadIOPS",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "WriteIOPS",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "ReadAwaitMs",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "WriteAwaitMs",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "ReadKiBps",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "WriteKiBps",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "AvgQueueDepth",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "UtilizationPct",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "IntervalSeconds",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "MountedVolumes",
+                                                          "type":  "string"
+                                                      },
+                                                      {
+                                                          "name":  "FilePath",
+                                                          "type":  "string"
+                                                      }
+                                                  ]
+                                  },
+                       "plan":  "Analytics"
+                   }
+}

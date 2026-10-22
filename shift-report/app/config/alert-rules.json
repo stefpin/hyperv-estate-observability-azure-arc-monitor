@@ -1,0 +1,245 @@
+{
+  "capturedUtc": "2026-07-25T00:00:00Z",
+  "sha256": "7a80646891001bd004f6cd30e5d030318559337f770ce74660f1abe446661a28",
+  "rules": [
+    {
+      "name": "hv-cluster-contention-high",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-cluster-contention-high",
+      "severity": 2,
+      "windowMinutes": 5,
+      "query": "Perf | where Computer == \"HV-HOST-01\" and ObjectName == \"Hyper-V Hypervisor Virtual Processor\" and CounterName == \"CPU Wait Time Per Dispatch\" and InstanceName contains \":\" | extend Guest=tostring(split(InstanceName,\":\")[0]) | where Guest in (\"WIN2019-GUEST\",\"WIN2022-GUEST\",\"WIN2025-GUEST-01\") | summarize Value=percentile(CounterValue,95)",
+      "threshold": 110000.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-cluster-cpu-critical",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-cluster-cpu-critical",
+      "severity": 1,
+      "windowMinutes": 10,
+      "query": "Perf | where Computer in (\"WIN2019-GUEST\",\"WIN2022-GUEST\",\"WIN2025-GUEST-01\") and ObjectName == \"Processor Information\" and CounterName == \"% Processor Time\" and InstanceName == \"_Total\" | summarize MemberCPU=avg(CounterValue) by Computer | summarize Value=avg(MemberCPU)",
+      "threshold": 90.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-cluster-cpu-high",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-cluster-cpu-high",
+      "severity": 2,
+      "windowMinutes": 10,
+      "query": "Perf | where Computer in (\"WIN2019-GUEST\",\"WIN2022-GUEST\",\"WIN2025-GUEST-01\") and ObjectName == \"Processor Information\" and CounterName == \"% Processor Time\" and InstanceName == \"_Total\" | summarize MemberCPU=avg(CounterValue) by Computer | summarize Value=avg(MemberCPU)",
+      "threshold": 80.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-cluster-memory-critical",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-cluster-memory-critical",
+      "severity": 1,
+      "windowMinutes": 10,
+      "query": "Perf | where Computer in (\"WIN2019-GUEST\",\"WIN2022-GUEST\",\"WIN2025-GUEST-01\") and ObjectName == \"Memory\" and CounterName == \"Available Bytes\" | summarize MemberMemory=100.0*(1-avg(CounterValue)/8589934592.0) by Computer | summarize Value=avg(MemberMemory)",
+      "threshold": 90.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-cluster-memory-high",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-cluster-memory-high",
+      "severity": 2,
+      "windowMinutes": 10,
+      "query": "Perf | where Computer in (\"WIN2019-GUEST\",\"WIN2022-GUEST\",\"WIN2025-GUEST-01\") and ObjectName == \"Memory\" and CounterName == \"Available Bytes\" | summarize MemberMemory=100.0*(1-avg(CounterValue)/8589934592.0) by Computer | summarize Value=avg(MemberMemory)",
+      "threshold": 85.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-disk-latency-critical",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-disk-latency-critical",
+      "severity": 1,
+      "windowMinutes": 5,
+      "query": "let latency=Perf | where ObjectName in (\"PhysicalDisk\",\"LogicalDisk\") and InstanceName != \"_Total\" and CounterName == \"Avg. Disk sec/Transfer\" | summarize Value=avg(CounterValue)*1000 by Computer,ObjectName,InstanceName;\r\nlet activity=Perf | where ObjectName in (\"PhysicalDisk\",\"LogicalDisk\") and InstanceName != \"_Total\" and CounterName == \"Disk Transfers/sec\" | summarize IOPS=avg(CounterValue) by Computer,ObjectName,InstanceName;\r\nlatency | join kind=inner activity on Computer,ObjectName,InstanceName | where IOPS > 1 | project Computer,ObjectName,InstanceName,Value",
+      "threshold": 50.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-disk-latency-high",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-disk-latency-high",
+      "severity": 2,
+      "windowMinutes": 5,
+      "query": "let latency=Perf | where ObjectName in (\"PhysicalDisk\",\"LogicalDisk\") and InstanceName != \"_Total\" and CounterName == \"Avg. Disk sec/Transfer\" | summarize Value=avg(CounterValue)*1000 by Computer,ObjectName,InstanceName;\r\nlet activity=Perf | where ObjectName in (\"PhysicalDisk\",\"LogicalDisk\") and InstanceName != \"_Total\" and CounterName == \"Disk Transfers/sec\" | summarize IOPS=avg(CounterValue) by Computer,ObjectName,InstanceName;\r\nlatency | join kind=inner activity on Computer,ObjectName,InstanceName | where IOPS > 1 | project Computer,ObjectName,InstanceName,Value",
+      "threshold": 20.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-guest-contention-high",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-guest-contention-high",
+      "severity": 2,
+      "windowMinutes": 5,
+      "query": "Perf | where Computer == \"HV-HOST-01\" and ObjectName == \"Hyper-V Hypervisor Virtual Processor\" and CounterName == \"CPU Wait Time Per Dispatch\" and InstanceName contains \":\" | extend Guest=tostring(split(InstanceName,\":\")[0]) | summarize Value=percentile(CounterValue,95) by Guest",
+      "threshold": 110000.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-guest-cpu-critical",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-guest-cpu-critical",
+      "severity": 1,
+      "windowMinutes": 10,
+      "query": "Perf | where ObjectName in (\"Processor Information\",\"Processor\") and CounterName == \"% Processor Time\" and InstanceName in (\"_Total\",\"total\") | summarize Value=avg(CounterValue) by Computer",
+      "threshold": 90.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-guest-cpu-high",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-guest-cpu-high",
+      "severity": 2,
+      "windowMinutes": 10,
+      "query": "Perf | where ObjectName in (\"Processor Information\",\"Processor\") and CounterName == \"% Processor Time\" and InstanceName in (\"_Total\",\"total\") | summarize Value=avg(CounterValue) by Computer",
+      "threshold": 80.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-heartbeat-missing",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-heartbeat-missing",
+      "severity": 2,
+      "windowMinutes": 10,
+      "query": "let expected=datatable(Computer:string)[\"HV-HOST-01\",\"SQL2019-GUEST\",\"WIN2019-GUEST\",\"WIN2022-GUEST\",\"WIN2025-GUEST-01\",\"RHEL94-GUEST\"];\r\nlet lastbeats=Heartbeat | summarize Seen=max(TimeGenerated) by Computer;\r\nexpected | join kind=leftouter lastbeats on Computer | project Computer,Value=iff(isnull(Seen),1440.0,todouble(datetime_diff('second',now(),Seen))/60.0)",
+      "threshold": 10.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-host-cpu-critical",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-host-cpu-critical",
+      "severity": 1,
+      "windowMinutes": 10,
+      "query": "Perf | where Computer == \"HV-HOST-01\" and ObjectName == \"Hyper-V Hypervisor Logical Processor\" and CounterName == \"% Total Run Time\" and InstanceName == \"_Total\" | summarize Value=avg(CounterValue)",
+      "threshold": 90.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-host-cpu-high",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-host-cpu-high",
+      "severity": 2,
+      "windowMinutes": 10,
+      "query": "Perf | where Computer == \"HV-HOST-01\" and ObjectName == \"Hyper-V Hypervisor Logical Processor\" and CounterName == \"% Total Run Time\" and InstanceName == \"_Total\" | summarize Value=avg(CounterValue)",
+      "threshold": 80.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-sql-grants-pending",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-sql-grants-pending",
+      "severity": 2,
+      "windowMinutes": 5,
+      "query": "HvSqlMemory_CL | summarize Value=min(PendingGrants)",
+      "threshold": 0.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-sql-os-memory-low",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-sql-os-memory-low",
+      "severity": 2,
+      "windowMinutes": 10,
+      "query": "HvSqlMemory_CL | summarize Value=avg(OsAvailableMB)",
+      "threshold": 1024.0,
+      "operator": "LessThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-windows-memory-critical",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-windows-memory-critical",
+      "severity": 1,
+      "windowMinutes": 10,
+      "query": "let capacity=datatable(Computer:string,Bytes:real)[\"HV-HOST-01\",68719476736.0,\"SQL2019-GUEST\",12884901888.0,\"WIN2019-GUEST\",8589934592.0,\"WIN2022-GUEST\",8589934592.0,\"WIN2025-GUEST-01\",8589934592.0];\r\nPerf | where ObjectName == \"Memory\" and CounterName == \"Available Bytes\" | summarize Available=avg(CounterValue) by Computer | join kind=inner capacity on Computer | project Computer,Value=100.0*(1-Available/Bytes)",
+      "threshold": 90.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    },
+    {
+      "name": "hv-windows-memory-high",
+      "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/microsoft.insights/scheduledqueryrules/hv-windows-memory-high",
+      "severity": 2,
+      "windowMinutes": 10,
+      "query": "let capacity=datatable(Computer:string,Bytes:real)[\"HV-HOST-01\",68719476736.0,\"SQL2019-GUEST\",12884901888.0,\"WIN2019-GUEST\",8589934592.0,\"WIN2022-GUEST\",8589934592.0,\"WIN2025-GUEST-01\",8589934592.0];\r\nPerf | where ObjectName == \"Memory\" and CounterName == \"Available Bytes\" | summarize Available=avg(CounterValue) by Computer | join kind=inner capacity on Computer | project Computer,Value=100.0*(1-Available/Bytes)",
+      "threshold": 85.0,
+      "operator": "GreaterThan",
+      "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab",
+      "failingPeriods": {
+        "numberOfEvaluationPeriods": 1,
+        "minFailingPeriodsToAlert": 1
+      }
+    }
+  ],
+  "meaning": "Report evaluates these unchanged demo rule queries at the source cutoff; not Azure alert-state history."
+}

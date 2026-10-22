@@ -1,0 +1,21 @@
+[Unit]
+Description=block-device iostat collector for Azure Monitor Agent
+After=local-fs.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/libexec/hv-storage-collector.py
+Restart=always
+RestartSec=10
+User=root
+UMask=0022
+Nice=10
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=read-only
+ProtectSystem=strict
+ReadWritePaths=/var/log/hv-storage
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target

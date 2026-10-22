@@ -1,0 +1,5 @@
+.test-deps/**
+tests/**
+**/__pycache__/**
+*.pyc
+CONTRACT.txt

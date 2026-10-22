@@ -1,0 +1,3 @@
+Perf | where TimeGenerated > ago(30m) and Computer == "SQL2019-GUEST"
+| where ObjectName == "SQLServer:Memory Manager" and CounterName in ("Total Server Memory (KB)","Free Memory (KB)","Database Cache Memory (KB)","Stolen Server Memory (KB)")
+| summarize MemoryMiB=avg(CounterValue)/1024 by CounterName,bin(TimeGenerated,1m)

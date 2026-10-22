@@ -1,0 +1,22 @@
+{
+    "Actions":  [
+                    "Microsoft.Maintenance/maintenanceConfigurations/read",
+                    "Microsoft.Maintenance/applyUpdates/read",
+                    "Microsoft.Maintenance/applyUpdates/write"
+                ],
+    "Name":  "SQL Scheduled Maintenance Cancellation",
+    "Description":  "Maintenance-guard safeguard; assignable only within the lab resource group.",
+    "IsCustom":  true,
+    "NotDataActions":  [
+
+                       ],
+    "NotActions":  [
+
+                   ],
+    "DataActions":  [
+
+                    ],
+    "AssignableScopes":  [
+                             "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo"
+                         ]
+}

@@ -1,0 +1,34 @@
+{
+  "properties": {
+    "windowSize": "PT10M",
+    "autoMitigate": true,
+    "description": "Demo: operational starting threshold. Notifications are attached separately (see docs/setup/19-alerts.md).",
+    "enabled": true,
+    "severity": 2,
+    "scopes": [
+      "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+    ],
+    "criteria": {
+      "allOf": [
+        {
+          "timeAggregation": "Average",
+          "threshold": 1024,
+          "failingPeriods": {
+            "minFailingPeriodsToAlert": 1,
+            "numberOfEvaluationPeriods": 1
+          },
+          "operator": "LessThan",
+          "metricMeasureColumn": "Value",
+          "query": "HvSqlMemory_CL | summarize Value=avg(OsAvailableMB)"
+        }
+      ]
+    },
+    "actions": {
+      "actionGroups": []
+    },
+    "evaluationFrequency": "PT5M",
+    "displayName": "hv-sql-os-memory-low"
+  },
+  "location": "<PRIMARY_REGION>",
+  "name": "hv-sql-os-memory-low"
+}

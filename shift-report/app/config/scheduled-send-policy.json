@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "policyId": "scheduled-send-v2-workbook-pdf",
+  "approval": {
+    "approvedBy": "operator@example.com",
+    "approvedAt": "2026-07-24T09:00:00Z",
+    "previewReportId": "dryrun-00000000-0000-0000-0000-000000000001",
+    "previewNote": "Replace with the rehearsal report you reviewed before approving the recurring format."
+  },
+  "revision": {
+    "status": "awaiting-operator-activation",
+    "requestedAt": "2026-07-24T12:00:00Z",
+    "request": "Example revision record: add the workbook-content PDF as a third report file and keep the original PDF and XLSX.",
+    "previousPolicyId": "scheduled-send-v1",
+    "previousPolicySha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "approvalMeaning": "approval records the earlier two-attachment approval only, not a new preview approval.",
+    "approvedBy": "operator@example.com",
+    "approvedAt": "2026-07-24T13:00:00Z",
+    "userReply": "Example approval reply recorded by the operator",
+    "previewReportId": "dryrun-00000000-0000-0000-0000-000000000002",
+    "previewEnvelopeSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "approvalScope": "Recurring three-attachment format and scoped deployment; not manual test dispatch.",
+    "activationRequirement": "Operator must verify the deployed package and configure the exact approved revision pin."
+  },
+  "resourceGroup": "rg-hyperv-arc-monitor-demo",
+  "scope": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo",
+  "mode": "scheduled",
+  "recipientAllowlist": [
+    "operator@example.com"
+  ],
+  "sender": "donotreply@00000000-0000-0000-0000-000000000000.azurecomm.net",
+  "templateVersion": "hv-table-email-v1",
+  "envelopeSchemaVersion": 3,
+  "reportFiles": [
+    ".pdf",
+    ".xlsx",
+    "-workbook.pdf"
+  ],
+  "timezone": "UTC+7",
+  "dispatchUtc": [
+    "07:00",
+    "15:00",
+    "23:00"
+  ],
+  "dispatchLt": [
+    "14:00",
+    "22:00",
+    "06:00 (+1 UTC date)"
+  ],
+  "sourceCutoffMinutes": 5,
+  "sourceWindowHours": 8,
+  "firstBoundaryUtc": "2026-07-25T15:00:00Z",
+  "files": {
+    "adapters.py": "4f7847a0a9f89cb7b0b1aefdc7eb25c7d5f69982d8a9cc59f69c14130a22f9c1",
+    "artifacts.py": "a53b565129aca5d39b4c1ceefc463ff7550bfee05067c8360da9571095dd5b3b",
+    "automation.py": "659d1f450c377e1a885ecd5b7eeb13deefd03615858d270591dd8d5129cd0063",
+    "domain.py": "0a7d74960d3d3fa01146b1044b7b5e4478590734bedd5dee3fcd92b64c462c87",
+    "email_assets.py": "d55e196b572f9e9c6d2702bfabc5594c8267c4f0444b252a2388c7dfd946cc24",
+    "email_template.py": "0c71fceb2107c2156fa7b6d3736670bdbf5ee80e8fc51019e2529906ba825b26",
+    "function_app.py": "3b4ec1a9a8fdd2b79afd05c8bf52dc4faf19789fa7ce3890d40df5ff21d634cb",
+    "health_rules.py": "b6ae5221eee0f3864ae71cf4d79b6b92cc9f9f45df723084882d3aa5d6ff121f",
+    "queries.py": "0e836d18ad9be8b536ba7c82da505f7a51acce494cc1937b2a9f278d4b5bdbee",
+    "runtime.py": "9ed025c54cd10bc8cf8473b91f9229f11404892b7510f34dcf72bbabdbd0463b",
+    "workbook_pdf.py": "1cf3de4b8319aa4105fedf43854ad98da378f008346597563ab78048538ae0ec",
+    "host.json": "ce1eb26550cbc40f31b638573a21f679cd2110244bae7c51e3614e185adac007",
+    "requirements.txt": "4a7f01d163612e94645360b1980f376a26757fc13ce19a352be83ff8d1234907",
+    "config\\alert-rules.json": "c7344c4e14f52cfcae4d1b06b3abf0929d9c5f731600779f3d420a641cfbc0bf",
+    "config\\banner.png": "b071f3f25309cc0753dfd804a5ff2aa703fbbb38cbcecb81785bfcbafc732a3c",
+    "config\\build_dashboards.py": "535111609de36c3e4b4bb81d1feb8e44ddb50c1826b072da67275942d478e2b8",
+    "config\\query-manifest.json": "2b58dc913ae7afeb66db4885c8598c1a8f8f3c27a98807a5632199416fa28f07",
+    "config\\email-branding\\manifest.json": "df3cccf36b910ac452b409a8b71deba69bd586f861acd4933fea864dcd41e83b",
+    "config\\email-branding\\brand-primary.png": "80d3dfb5ff1c91cff2157f280a02cd345bb992b060c82630c07a7e0e0d23aa46",
+    "config\\email-branding\\brand-secondary.png": "0e8ec862eec9983870cf8352ac5166b063a8316b1571944b2a9f76e475919a0d"
+  },
+  "inlineAssets": [
+    {
+      "name": "brand-primary.png",
+      "contentId": "brand-primary",
+      "contentType": "image/png",
+      "size": 1453,
+      "sha256": "80d3dfb5ff1c91cff2157f280a02cd345bb992b060c82630c07a7e0e0d23aa46"
+    },
+    {
+      "name": "brand-secondary.png",
+      "contentId": "brand-secondary",
+      "contentType": "image/png",
+      "size": 2217,
+      "sha256": "0e8ec862eec9983870cf8352ac5166b063a8316b1571944b2a9f76e475919a0d"
+    }
+  ]
+}

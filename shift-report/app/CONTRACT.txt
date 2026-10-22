@@ -1,0 +1,336 @@
+SHIFT HEALTH REPORT RUNTIME - Python v2 Azure Functions (reference implementation)
+
+OVERVIEW
+One package is deployed to TWO separate Function apps with disjoint identities (APP_KIND=producer or
+dispatcher). The producer collects a frozen evidence snapshot, renders the report files and stores an
+immutable report set in private blob storage. The dispatcher previews, verifies and sends the e-mail
+through Azure Communication Services. Nothing in this runtime changes the monitored estate.
+
+ENVIRONMENT CONSTANTS (edit before deploying)
+  domain.py      SUB, RG, WORKSPACES (workspace resource IDs and workspace IDs), MACHINES, GRAFANA_ENDPOINT,
+                 QUEUE, DASHBOARD_UID/FOLDER_UID/DATASOURCE_UID, PILOT_RECIPIENT
+  automation.py  POLICY_ID, FIRST_BOUNDARY, SENDER, APPROVAL, REVISION
+Shipped values are placeholders (<SUBSCRIPTION_ID>, sentinel GUIDs, example.com). Replace them with your own
+values, regenerate the policy pin (see below) and re-run the tests.
+
+REPORT SET (THREE REPORT FILES PER SHIFT)
+  1. HV-<reportId>.pdf           summary page plus exactly eight native Grafana chart pages
+  2. HV-<reportId>.xlsx          every evidence dataset, query provenance and the plotted chart data
+  3. HV-<reportId>-workbook.pdf  every cell of the XLSX rendered as a PDF (same content; cached formula
+                                 values are displayed, not recalculated)
+Two inline CID PNG brand images accompany the HTML body. They are NOT report files, so the ACS message
+has five MIME parts. The combined document and image payload stays within a 5 MiB budget.
+
+E-MAIL ENVELOPE V3
+The e-mail is a concise table-based HTML/plain-text message. Its subject uses the actual local (UTC+7)
+measurement cutoff and a [TEST] suffix for rehearsals. Envelope schemaVersion=3 carries
+templateVersion=hv-table-email-v1, htmlBody, emailSummary, inlineAssets and the three report attachments.
+The exact approval hash covers ALL of those fields, the three report artifacts and both image hashes.
+Older stored V1 plain-text and V2 two-file envelopes remain readable, downloadable and manually sendable
+with their own exact approval; they can never inherit scheduled authorization.
+Inline assets are immutable reports/<id>/inline/<name>; the authenticated artifact endpoint also exposes only
+those exact PNGs. CPU and RAM keep LastSampleUtc separate from the chart bucket TimeGenerated, so freshness
+uses the actual sample time, never the start of a five-minute bucket.
+
+SCHEDULED-SEND POLICY (PINNED, OPT-IN)
+A recurring send needs an explicit, pinned policy. config/scheduled-send-policy.json records the policy ID,
+the exact sender, the single allowed recipient, the dispatch times, the template version and the SHA-256 of
+every runtime, configuration and rendering input listed in PINNED_FILES (automation.py). The SHA-256 of the
+policy file itself is configured as AUTO_SEND_POLICY_SHA256. Changing any pinned input changes a hash and the
+policy fails closed until a person reviews the change and re-pins:
+  python tools/pin_policy.py        (from the shift-report folder; rewrites the policy file, prints the pin)
+
+Schedule: dispatch at UTC 07:00, 15:00 and 23:00, which is 14:00, 22:00 and 06:00 local time (UTC+7, no
+daylight saving). The source cutoff is five minutes before the boundary and the source window is the eight
+hours before the boundary. The first allowed boundary is FIRST_BOUNDARY (an example date).
+
+Settings, identically on BOTH apps when enabling the policy:
+  AUTO_SEND_ENABLED=true
+  AUTO_SEND_POLICY_SHA256=<value printed by tools/pin_policy.py>
+  SCHEDULE_ENABLED=true
+  SEND_ENABLED=true
+  RECIPIENT_ALLOWLIST=operator@example.com          (must equal PILOT_RECIPIENT)
+  ACS_SENDER=donotreply@<your-acs-domain-id>.azurecomm.net     (must equal SENDER)
+Keep APP_KIND, REPORT_STORAGE_ACCOUNT, identity/host/queue settings, ACS_ENDPOINT (your HTTPS
+communication.azure.com endpoint) and GRAFANA_ENDPOINT. No new infrastructure, permissions, identity or secret
+is needed. Do not set WEBSITE_TIME_ZONE or TZ on Flex Consumption; leave the host in UTC.
+All three booleans default false; AUTO_SEND_POLICY_SHA256 defaults empty.
+The producer has no mailer or send endpoint regardless of SEND_ENABLED.
+
+The pin is the SHA-256 of the EXACT BYTES of config/scheduled-send-policy.json. Preserve package bytes and
+line endings on deployment (the repository forces LF). The manifest pins the runtime, configuration and
+rendering inputs, including workbook_pdf.py, the policy implementation, the renderer, the brand PNGs, the
+report builder, the source queries and the health rules. Do not regenerate the pin to silently authorize
+template changes: a changed input requires review and an explicit new authorization.
+
+ONLY an actual scheduled dispatch call at the exact current dispatch minute can
+use this policy. POST /api/dispatch remains strictly manual, including for a
+shift-* reportId: it always requires the existing immutable per-report approval.
+Dryruns also always require per-report approval. No approvals for future IDs are
+created; neither runtime identity can write approvals. With AUTO_SEND_ENABLED
+false, existing per-report approval behavior remains the default. With it true,
+invalid policy/pin/inputs fail closed for scheduled operations, never fall back
+to an unrelated per-report approval. Earlier-than-first scheduled prepare,
+preflight and worker collection are blocked before any source request.
+
+New generation creates reports/<id>/dispatch-integrity.json CREATE ONLY before
+Ready. This small receipt binds original job/provenance/deadlines, evidence hash,
+health, envelope, structured summary, all three documents, both logos and policy
+ID/hash. Dispatcher reads it through its existing reports permissions, NEVER
+the potentially large evidence snapshot or the lab. Missing/changed receipt
+cannot authorize an old Ready job. For auto send, creation/start/freeze/extraction/
+finish must be ordered within [boundary-5m,boundary); job sourceStart must be
+boundary-8h. The exact subject/plaintext/HTML are reconstructed using the pinned
+renderer from the stored structured summary; branding, table schema, authoritative
+health and source metadata are checked as well as the immutable summary hash.
+All document/image sizes, paths, types and SHA-256s are verified before claiming.
+The combined 5 MiB budget still applies. All three docs and both exact logos are mandatory.
+
+Dispatch claim remains CREATE ONLY. It adds authorizationMode, policyId,
+policySha256, policyApprovedAt, dispatchIntegritySha256 and evidenceSha256.
+Policy/provenance and dispatch minute are checked again after artifact downloads;
+the minute is checked again after durable claiming, before submission. An expired
+claim records Failed without submission. Sending/Submitted/DeliveryUncertain/
+Failed claims are never automatically resubmitted. No notice, stale replacement,
+backfill, startup send or past_due send is introduced.
+
+GET /api/automation is Function-authenticated and read-only on BOTH apps.
+It constructs no Azure clients and reads only package files and the UTC clock.
+Returns status (Disabled/Gated/Enabled/InvalidPolicy), scheduleEnabled, sendEnabled,
+autoSendEnabled, effectiveAutoSend, policyId, policySha256, configuredPolicySha256,
+policyVerified, formatVerified, templateVersion, fingerprints, inlineAssets,
+historical approval metadata, approved revision, allowedRecipients, allowedSender, resourceGroup, timezone,
+sourceCutoffMinutes, sourceWindowHours, firstBoundary {utc,lt}, boundaries
+{utc,lt,ltDateOffset}, nextCollection {utc,lt}, nextDispatch {utc,lt}.
+With invalid policy returns HTTP409/status InvalidPolicy, error and disabled
+effectiveAutoSend, not a success-shaped fallback. Invalid base settings return
+HTTP409/status InvalidConfiguration. No credentials, tokens or evidence appear.
+Next times are eligible clock opportunities, not a promise of Ready/delivery;
+the current exact timer minute counts as eligible. They are null for invalid policy.
+This route does not expire ledger jobs or mutate anything (unlike /api/status).
+
+Deploy this package to TWO separate apps/identities, not a combined app.
+The runtime performs no Azure action at import time. All tests are offline with fake services.
+
+ENVIRONMENT
+APP_KIND=producer or dispatcher (required at Function indexing/startup).
+REPORT_STORAGE_ACCOUNT=<your private report storage account name>.
+GRAFANA_ENDPOINT=https://<GRAFANA_ENDPOINT>
+ACS_ENDPOINT=https://<resource>.communication.azure.com
+ACS_SENDER=<actual Azure-provisioned sender>; standing policy requires the exact sender (SENDER in automation.py).
+RECIPIENT_ALLOWLIST=operator@example.com (only this one pilot recipient accepted).
+SEND_ENABLED=false and SCHEDULE_ENABLED=false by default. Independent gates.
+Do not set WEBSITE_TIME_ZONE or TZ. Timer schedules are UTC.
+WEBSITE_HOSTNAME present: ManagedIdentityCredential; otherwise AzureCliCredential
+with your subscription. No client secrets, account keys or SAS tokens.
+Host AzureWebJobsStorage must be identity-based (configured by deployment owner).
+Producer queue trigger uses connection prefix REPORT_QUEUE:
+  REPORT_QUEUE__queueServiceUri=https://<reportaccount>.queue.core.windows.net
+  REPORT_QUEUE__credential=managedidentity
+Queue name hv-report-jobs. Queue SDK writes UTF-8 JSON; host messageEncoding=none.
+Provision containers/queue before starting; runtime never provisions resources.
+
+PUBLIC HTTP CONTRACT (all routes have auth_level FUNCTION)
+Producer POST /api/prepare
+  Body: {"mode":"dryrun","jobId":"optional-safe-correlation-id"}
+  Or: {"mode":"scheduled","boundary":"2026-07-25T07:00:00Z","jobId":"optional"}
+  mode required. Only these fields accepted. Scheduled requires SCHEDULE_ENABLED
+  and current time within boundary-5 minutes through strictly before boundary.
+  UTC scheduled boundaries only 07:00,15:00,23:00. Never backfills missed shifts.
+  dryrun uses current clock as its boundary, fresh UUID and explicit REHEARSAL
+  labels; an optional boundary must equal the current UTC clock to the second.
+  Returns 202 {reportId,jobId,status,deduplicated}; only registers/queues work.
+Producer GET /api/connectivity
+  Read-only effective permission proof: existing dashboards canSave=false,
+  own hv-shift-health-report canSave=true in folder hv-shift-health.
+Producer GET /api/status?reportId=<id>
+Dispatcher GET /api/status?reportId=<id>
+  Returns durable job status, all document hashes/sizes, health/cutoff and dispatch proof.
+  Expired Queued/Generating jobs become Failed when status is inspected; no retry.
+Dispatcher GET /api/preview?reportId=<id>
+  Returns exact stored {reportId,sender,to,subject,body,attachments},
+  envelopeSha256, allowedReportId, sendEnabled and honest deliveryGuarantee.
+  attachments includes exact name, private blob path, size, sha256, contentType.
+  Preview never sends; report must be Ready and configured sender/to unchanged.
+Dispatcher GET /api/artifact?reportId=<id>&filename=<exact attachment name>
+  Function-authenticated, read-only download of Ready immutable original PDF,
+  XLSX, workbook PDF, or exact inline logos; no arbitrary filename/path access.
+  Verifies stored size/hash, returns no-store plus X-Content-SHA256. No raw
+  evidence, envelope, approval write, arbitrary path, public SAS or storage key.
+Dispatcher POST /api/dispatch
+  Body exactly {"reportId":"<id>"}; no caller-supplied recipient/content.
+  Requires SEND_ENABLED=true, exact Ready report and exact immutable approval.
+  Returns Submitted with ACS operationId/status, never falsely Delivered.
+  Duplicate dispatch returns durable prior status without another send.
+HTTP errors: 400 invalid input, 409 controlled gate/integrity/not-ready failure,
+500 unexpected runtime failure. No raw service response or credentials in HTTP.
+
+TRIGGERS
+Producer preflight: UTC 06:50,14:50,22:50. Read-checks dedicated datasource and
+records a per-boundary ledger result. Read preflight is NOT render/Editor proof.
+Producer collection: UTC 06:55,14:55,22:55, boundaries UTC 07:00,15:00,23:00
+(LT 14:00,22:00,next-day 06:00). Predetermined nominal start=boundary-8h,
+exclusive sourceEnd=boundary-5m. Queued worker takes freezeAt at extraction start.
+Dispatcher timer: UTC 07:00,15:00,23:00. Both flags required, plus exact per-report
+approval by default, OR the explicitly enabled pinned standing policy above.
+All timer handlers skip past_due and any non-exact current timer minute.
+run_on_startup=false. No startup backfill. BatchSize=1, maxDequeueCount=1.
+Generation errors escape queue handler AND record Failed; no success fallback.
+Missing Ready at dispatch records controlled Failed, no stale artifact set or late email.
+No separate late notice is sent; any notice would need independent approval.
+
+APPROVAL AND DURABLE PRIVATE STORAGE
+evidence/<reportId>/snapshot.json: producer create-only immutable evidence JSON.
+reports/<reportId>/HV-<reportId>.pdf, .xlsx, and -workbook.pdf: immutable report set.
+reports/<reportId>/envelope.json: exact immutable canonical envelope.
+ledger/jobs/<reportId>.json: Queued -> Generating -> Ready or Failed.
+ledger/dispatch/<reportId>.json: conditional create Sending -> Submitted or
+DeliveryUncertain; any existing claim prevents a second send, indefinitely.
+ledger/locks/native-render: 60-second blob lease renewed every 20 seconds;
+dashboard save, datasource parity verification, native PDF rendering and merge
+serialized; lease renewal failure prevents Ready.
+ledger/preflight/<boundary>.json: conditional preflight status.
+approvals/<reportId>.json: operator writes; dispatcher READ ONLY, producer denied.
+packages container: runtime does not touch it; deployment owner manages.
+
+Approval blob schema (the path is container approvals, root <reportId>.json):
+{
+  "reportId":"<exact reportId>",
+  "to":["operator@example.com"],
+  "approved":true,
+  "envelopeSha256":"<exact value returned by preview>"
+}
+Alternatively replace envelopeSha256 with exact sender, subjectSha256,
+bodySha256 and attachments copied verbatim from preview (all fields required).
+Hashes use UTF-8; envelope uses json.dumps(sort_keys=True,ensure_ascii=False,
+separators=(',',':'),allow_nan=False). preview-only informational fields are
+NOT part of the envelope hash. Do not approve an unknown/pre-approved future ID.
+
+ACS SAFETY
+EmailClient.begin_send uses credential identity, retry_total=0, durable operation_id
+and repeatability IDs/first-sent time recorded BEFORE submission. Official ACS
+documentation uses Repeatability-Request-ID and Repeatability-First-Sent (IMF UTC
+date), NOT x-ms-* names. Both canonical and requested x-ms aliases are preserved;
+only the documented pair is relied upon for repeatability:
+https://learn.microsoft.com/rest/api/communication/repeatable-requests
+No blind resend, even within the five-minute tracking window; after interrupted
+submission the state is DeliveryUncertain. Poll timeout is 90 seconds. ACS
+Succeeded is submission acceptance, not Delivered or guaranteed inbox receipt.
+Public status includes operationId for operator diagnostics; delivery events/log
+integration must be configured separately by deployment owner.
+
+DATA, REPORTS AND SCOPE
+query-manifest.json and the pure build_dashboards.py are the config build inputs.
+config/banner.png is a neutral placeholder banner; replace it with your own. Runtime uses the 16 original export datasets plus a versioned Alert Health dataset.
+All six known physical Logs source types have half-open UTC source filters and
+isnotnull(ingestion_time()) AND ingestion_time() <= freezeAt injected at EVERY
+source occurrence, including cross-workspace/union/join inputs. Unknown/unbounded
+source patterns fail. Null-ingestion records are excluded, never called frozen.
+Five-minute buckets, sequential bounded extraction (225-second total budget).
+SQL memory adds minimum pending-grants per bucket without removing source peak.
+Data Quality adds observed bucket coverage. Query text/SHA and full records are
+in immutable evidence and full query provenance in XLSX. Partial/truncated/error
+results fail; ARG pagination indications fail rather than silently dropping rows.
+Only confirmed reads retry HTTP429/503, at most three attempts. No transport or
+mutation retries. Inventory ARG is a CURRENT indexed snapshot, NOT frozen history.
+ARM query scope: subscription <SUBSCRIPTION_ID> and
+resource group rg-hyperv-arc-monitor-demo; the two configured Logs workspaces only.
+No ARM writes, direct SQL, guest commands or collector/alert/maintenance changes.
+
+14 required pairs = Heartbeat+Perf for six machines, SQL memory for SQL2019-GUEST,
+Linux disk for RHEL94-GUEST. All require last raw source sample within five
+minutes of sourceEnd and >=90% source bucket coverage. Per-machine CPU/RAM also
+require >=90% metric bucket coverage and the last bucket. Otherwise INSUFFICIENT
+EVIDENCE, never healthy. The report evaluates all 17 unchanged demo alert queries at the source cutoff,
+using their exact original five/ten-minute windows and thresholds (not chart
+peaks or invented thresholds). The copied rule version/hash is in the evidence.
+An entirely missing required chart dataset also means INSUFFICIENT EVIDENCE.
+CT inventory is not a fifteenth required continuous signal: its caveat stays open.
+BPA no run remains Not assessed yet; maintenance remains Open.
+All timestamps stored UTC, display UTC+7 (fixed UTC+7, no DST).
+
+PDF uses ReportLab branded readable summary plus exactly eight NATIVE Grafana
+chart pages (cpu,memory,sql-memory,sql-grants,cluster-storage,contention,storage,
+sql-activity) with page numbering. Dedicated UID hv-shift-health-report ONLY,
+datasource hv-azure-monitor retained. The existing hv-operations-cockpit and
+hv-operations-report are NEVER saved. Only compact report dashboard may mutate.
+Charts use fixed KQL datatable transforms of the frozen record dataset, not live
+requeries. Before native render, identical frozen queries are round-tripped via
+actual Grafana datasource in table format and every chart point/count reconciled.
+Panel queries carry no inventory/ARG. Native endpoint /api/reports/render/pdfs
+uses epoch MILLISECONDS and timeout <=240 seconds. Render/lease global deadline
+leaves room within the ten-minute host budget. PDF rejects wrong page count,
+invalid PDF, unreadable dimensions and 1970-01-01 time ranges.
+Native Grafana pages/queries are never substituted with fabricated chart images.
+
+XLSX is genuine XlsxWriter output in memory, Arial throughout, full rows for all
+16 datasets plus summary, complete query provenance and exact frozen chart data.
+All formulas have explicit current cached values and auto-recalc enabled. No
+Excel COM, environment-dependent Office installation, or external links. External
+strings are always literal text, never formulas/URLs. Nulls stay blank, idle
+latency N/A; storage layers not additive, scheduling wait ns/dispatch not ready%,
+SQL overlapping memory not summed, logical Windows group NOT WSFC.
+All three report files plus both CID logos must total <=5 MiB unencoded or
+controlled Failed; the converter receives the remaining budget after originals/logos.
+Evidence budget 16 MiB; larger results fail, never truncate or omit Excel.
+Ready ledger includes evidence hash, all three attachment hashes/sizes, canonical
+envelope hash, build duration and honest health.
+
+WORKBOOK-CONTENT PDF
+workbook_pdf.py parses the ACTUAL generated XLSX ZIP/XML, never rebuilds a summary
+from evidence. All worksheets, including hidden/empty sheets, follow workbook
+order. Every explicit cell (including styled blanks), zero/false, cached formula
+value, Shift Summary metadata/limitations, dataset records, full query lines and
+Frozen Chart Data is preserved. The workbook's embedded banner is included.
+No new production dependency: standard-library ZIP/XML plus existing ReportLab;
+ReportLab's bundled Vera regular/bold TrueType fonts are embedded and glyph-checked.
+The original artifacts.py workbook/summary/native-PDF generation is UNCHANGED.
+Landscape A4 pages use 8pt cell text (7pt row/footer labels), wrapping unbroken
+hashes, timestamps, URLs and JSON; tall rows continue onto pages without clipping.
+Wide sheets use horizontal column bands repeating their first column, column
+letters, and readable first-row headers. Extremely tall headers are fully paginated
+at band start, rather than repeated over every continuation page. Sheet/band/row
+coordinates and source XLSX SHA256 are visible. Blank cells stay blank. Tab/CR
+characters are explicitly shown as backslash-t/backslash-r; LF stays a line break.
+Formula caches are displayed, not recalculated; missing or untyped empty numeric
+caches fail closed (an explicitly typed empty-string cache is supported).
+Unsupported glyphs/controls, malformed/duplicate cells, missing sheets/images,
+external relationships or unsupported drawings cannot silently disappear: conversion
+raises ControlledError and generation records Failed with no two-file fallback.
+The ZIP safety ceiling is 128 MiB expanded XML, never a silent row/value limit.
+Output is deterministic with invariant PDF metadata and compressed streams.
+V3 preview/dispatch and the actual Mailer validate exact names, MIME types,
+positive sizes, paths, hashes, report count and the combined budget. The immutable
+integrity receipt and exact envelope approval bind the additional workbook PDF.
+Durable claim, duplicate/no-blind-retry behavior and all UTC/local timers are unchanged.
+
+CALLABLES / TESTING
+Runtime(settings,store,sources=None,queue=None,mailer=None,clock=utcnow):
+prepare(body), generate(job), status(reportId), preview(reportId),
+dispatch(reportId,scheduled=False), preflight(past_due=False),
+collection_tick(past_due=False), dispatch_tick(past_due=False).
+Pure helpers in domain.py, queries.py and artifacts.py are independently testable.
+Run the offline unit tests from the app directory (no network, fake services, no extra framework):
+  python -m unittest discover -s tests -q
+Runtime versions used for development: Python 3.12, ReportLab 4.4.4, XlsxWriter 3.2.9, PyMuPDF 1.26.5
+(see requirements.txt). The suite covers actual state-machine generation with fake submission, the
+byte-preserved original PDF and the 20-sheet XLSX, full cell/cache/image coverage of the workbook PDF on a
+deterministic synthetic workbook of realistic scale (tests/synthetic.py), empty/wide/tall/long-value
+rendering, missing or modified third-file failures, exact payload budget, old-approval compatibility, five
+MIME parts, UTC/local day crossing, all gates, not-before rules and deadlines, tampering, de-duplication and
+ambiguity, manual/dry-run isolation and the read-only automation routes.
+The full-value workbook PDF is intentionally lengthy (hundreds of pages for a real shift); it is a faithful
+copy of the XLSX, not a summary.
+
+ACTIVATION CHECKLIST (owner actions)
+Linux-compatible dependency wheels (built for manylinux, Python 3.12); separate app identities and
+managed-identity host/queue connection settings; private containers and queue; correctly scoped roles; a
+provisioned ACS sender and endpoint; a dedicated Grafana Editor identity and native report rendering
+availability. Run an end-to-end cloud rehearsal that proves the actual Grafana datasource frame schema, the
+native render and the artifact size BEFORE enabling any send. SEND_ENABLED and SCHEDULE_ENABLED stay false
+until you deliberately enable them. Manual approval blobs are written only after exact per-report review of
+the preview (reportId and envelope SHA-256).
+Before enabling the standing policy verify both /api/automation results, the package bytes, the identity
+scoping and the source/render/send readiness. Existing Ready reports produced without the standing-policy
+receipt cannot be adopted automatically. Only a current, exact, future timer opportunity can send; the runtime
+never backfills missed shifts. Do not silently re-pin changed inputs.

@@ -1,0 +1,495 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-05-01",
+      "name": "sthvshift<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-health-reporting"
+      },
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "allowBlobPublicAccess": false,
+        "allowSharedKeyAccess": false,
+        "minimumTlsVersion": "TLS1_2",
+        "supportsHttpsTrafficOnly": true,
+        "accessTier": "Hot",
+        "publicNetworkAccess": "Enabled",
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "Allow"
+        },
+        "encryption": {
+          "keySource": "Microsoft.Storage",
+          "services": {
+            "blob": {
+              "enabled": true
+            },
+            "file": {
+              "enabled": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-05-01",
+      "name": "sthvhost<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-health-reporting"
+      },
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "allowBlobPublicAccess": false,
+        "allowSharedKeyAccess": false,
+        "minimumTlsVersion": "TLS1_2",
+        "supportsHttpsTrafficOnly": true,
+        "accessTier": "Hot",
+        "publicNetworkAccess": "Enabled",
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "Allow"
+        },
+        "encryption": {
+          "keySource": "Microsoft.Storage",
+          "services": {
+            "blob": {
+              "enabled": true
+            },
+            "file": {
+              "enabled": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-05-01",
+      "name": "sthvshift<SUFFIX>/default/evidence",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', 'sthvshift<SUFFIX>')]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-05-01",
+      "name": "sthvshift<SUFFIX>/default/reports",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', 'sthvshift<SUFFIX>')]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-05-01",
+      "name": "sthvshift<SUFFIX>/default/ledger",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', 'sthvshift<SUFFIX>')]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-05-01",
+      "name": "sthvshift<SUFFIX>/default/approvals",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', 'sthvshift<SUFFIX>')]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-05-01",
+      "name": "sthvshift<SUFFIX>/default/packages",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', 'sthvshift<SUFFIX>')]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-05-01",
+      "name": "sthvshift<SUFFIX>/default/deploy-producer",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', 'sthvshift<SUFFIX>')]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-05-01",
+      "name": "sthvshift<SUFFIX>/default/deploy-dispatcher",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', 'sthvshift<SUFFIX>')]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+      "apiVersion": "2023-05-01",
+      "name": "sthvshift<SUFFIX>/default/hv-report-jobs",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', 'sthvshift<SUFFIX>')]"
+      ],
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2023-09-01",
+      "name": "law-hv-shift-<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-health-reporting"
+      },
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        },
+        "retentionInDays": 30,
+        "features": {
+          "disableLocalAuth": true
+        },
+        "publicNetworkAccessForIngestion": "Enabled",
+        "publicNetworkAccessForQuery": "Enabled",
+        "workspaceCapping": {
+          "dailyQuotaGb": 0.1
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "appi-hv-shift-<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-health-reporting"
+      },
+      "kind": "web",
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', 'law-hv-shift-<SUFFIX>')]"
+      ],
+      "properties": {
+        "Application_Type": "web",
+        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', 'law-hv-shift-<SUFFIX>')]",
+        "DisableLocalAuth": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2024-04-01",
+      "name": "plan-hv-shift-producer-<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-health-reporting"
+      },
+      "kind": "functionapp",
+      "sku": {
+        "name": "FC1",
+        "tier": "FlexConsumption"
+      },
+      "properties": {
+        "reserved": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2024-04-01",
+      "name": "func-hv-shift-producer-<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-health-reporting"
+      },
+      "kind": "functionapp,linux",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', 'plan-hv-shift-producer-<SUFFIX>')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', 'sthvhost<SUFFIX>')]",
+        "[resourceId('Microsoft.Insights/components', 'appi-hv-shift-<SUFFIX>')]"
+      ],
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', 'plan-hv-shift-producer-<SUFFIX>')]",
+        "httpsOnly": true,
+        "clientAffinityEnabled": false,
+        "functionAppConfig": {
+          "deployment": {
+            "storage": {
+              "type": "blobContainer",
+              "value": "https://sthvshift<SUFFIX>.blob.core.windows.net/deploy-producer",
+              "authentication": {
+                "type": "SystemAssignedIdentity"
+              }
+            }
+          },
+          "runtime": {
+            "name": "python",
+            "version": "3.12"
+          },
+          "scaleAndConcurrency": {
+            "maximumInstanceCount": 40,
+            "instanceMemoryMB": 2048
+          }
+        },
+        "siteConfig": {
+          "ftpsState": "Disabled",
+          "minTlsVersion": "1.2",
+          "scmMinTlsVersion": "1.2",
+          "http20Enabled": true,
+          "appSettings": [
+            {
+              "name": "AzureWebJobsStorage__accountName",
+              "value": "sthvhost<SUFFIX>"
+            },
+            {
+              "name": "AzureWebJobsStorage__credential",
+              "value": "managedidentity"
+            },
+            {
+              "name": "APP_KIND",
+              "value": "producer"
+            },
+            {
+              "name": "REPORT_STORAGE_ACCOUNT",
+              "value": "sthvshift<SUFFIX>"
+            },
+            {
+              "name": "REPORT_QUEUE__queueServiceUri",
+              "value": "https://sthvshift<SUFFIX>.queue.core.windows.net"
+            },
+            {
+              "name": "REPORT_QUEUE__credential",
+              "value": "managedidentity"
+            },
+            {
+              "name": "ACS_ENDPOINT",
+              "value": "https://acs-hv-shift-<SUFFIX>.asiapacific.communication.azure.com"
+            },
+            {
+              "name": "ACS_SENDER",
+              "value": "donotreply@00000000-0000-0000-0000-000000000000.azurecomm.net"
+            },
+            {
+              "name": "GRAFANA_ENDPOINT",
+              "value": "https://<GRAFANA_ENDPOINT>"
+            },
+            {
+              "name": "RECIPIENT_ALLOWLIST",
+              "value": "operator@example.com"
+            },
+            {
+              "name": "SEND_ENABLED",
+              "value": "false"
+            },
+            {
+              "name": "SCHEDULE_ENABLED",
+              "value": "false"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('Microsoft.Insights/components', 'appi-hv-shift-<SUFFIX>'), '2020-02-02').ConnectionString]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_AUTHENTICATION_STRING",
+              "value": "Authorization=AAD"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+      "apiVersion": "2024-04-01",
+      "name": "func-hv-shift-producer-<SUFFIX>/ftp",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', 'func-hv-shift-producer-<SUFFIX>')]"
+      ],
+      "properties": {
+        "allow": false
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+      "apiVersion": "2024-04-01",
+      "name": "func-hv-shift-producer-<SUFFIX>/scm",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', 'func-hv-shift-producer-<SUFFIX>')]"
+      ],
+      "properties": {
+        "allow": false
+      }
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2024-04-01",
+      "name": "plan-hv-shift-dispatcher-<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-health-reporting"
+      },
+      "kind": "functionapp",
+      "sku": {
+        "name": "FC1",
+        "tier": "FlexConsumption"
+      },
+      "properties": {
+        "reserved": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2024-04-01",
+      "name": "func-hv-shift-dispatch-<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-health-reporting"
+      },
+      "kind": "functionapp,linux",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', 'plan-hv-shift-dispatcher-<SUFFIX>')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', 'sthvhost<SUFFIX>')]",
+        "[resourceId('Microsoft.Insights/components', 'appi-hv-shift-<SUFFIX>')]"
+      ],
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', 'plan-hv-shift-dispatcher-<SUFFIX>')]",
+        "httpsOnly": true,
+        "clientAffinityEnabled": false,
+        "functionAppConfig": {
+          "deployment": {
+            "storage": {
+              "type": "blobContainer",
+              "value": "https://sthvshift<SUFFIX>.blob.core.windows.net/deploy-dispatcher",
+              "authentication": {
+                "type": "SystemAssignedIdentity"
+              }
+            }
+          },
+          "runtime": {
+            "name": "python",
+            "version": "3.12"
+          },
+          "scaleAndConcurrency": {
+            "maximumInstanceCount": 40,
+            "instanceMemoryMB": 2048
+          }
+        },
+        "siteConfig": {
+          "ftpsState": "Disabled",
+          "minTlsVersion": "1.2",
+          "scmMinTlsVersion": "1.2",
+          "http20Enabled": true,
+          "appSettings": [
+            {
+              "name": "AzureWebJobsStorage__accountName",
+              "value": "sthvhost<SUFFIX>"
+            },
+            {
+              "name": "AzureWebJobsStorage__credential",
+              "value": "managedidentity"
+            },
+            {
+              "name": "APP_KIND",
+              "value": "dispatcher"
+            },
+            {
+              "name": "REPORT_STORAGE_ACCOUNT",
+              "value": "sthvshift<SUFFIX>"
+            },
+            {
+              "name": "REPORT_QUEUE__queueServiceUri",
+              "value": "https://sthvshift<SUFFIX>.queue.core.windows.net"
+            },
+            {
+              "name": "REPORT_QUEUE__credential",
+              "value": "managedidentity"
+            },
+            {
+              "name": "ACS_ENDPOINT",
+              "value": "https://acs-hv-shift-<SUFFIX>.asiapacific.communication.azure.com"
+            },
+            {
+              "name": "ACS_SENDER",
+              "value": "donotreply@00000000-0000-0000-0000-000000000000.azurecomm.net"
+            },
+            {
+              "name": "GRAFANA_ENDPOINT",
+              "value": "https://<GRAFANA_ENDPOINT>"
+            },
+            {
+              "name": "RECIPIENT_ALLOWLIST",
+              "value": "operator@example.com"
+            },
+            {
+              "name": "SEND_ENABLED",
+              "value": "false"
+            },
+            {
+              "name": "SCHEDULE_ENABLED",
+              "value": "false"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('Microsoft.Insights/components', 'appi-hv-shift-<SUFFIX>'), '2020-02-02').ConnectionString]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_AUTHENTICATION_STRING",
+              "value": "Authorization=AAD"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+      "apiVersion": "2024-04-01",
+      "name": "func-hv-shift-dispatch-<SUFFIX>/ftp",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', 'func-hv-shift-dispatch-<SUFFIX>')]"
+      ],
+      "properties": {
+        "allow": false
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+      "apiVersion": "2024-04-01",
+      "name": "func-hv-shift-dispatch-<SUFFIX>/scm",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', 'func-hv-shift-dispatch-<SUFFIX>')]"
+      ],
+      "properties": {
+        "allow": false
+      }
+    }
+  ]
+}

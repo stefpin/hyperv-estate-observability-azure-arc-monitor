@@ -1,0 +1,43 @@
+{
+  "properties": {
+    "windowSize": "PT10M",
+    "autoMitigate": true,
+    "description": "Demo: operational starting threshold. Notifications are attached separately (see docs/setup/19-alerts.md).",
+    "enabled": true,
+    "severity": 1,
+    "scopes": [
+      "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+    ],
+    "criteria": {
+      "allOf": [
+        {
+          "timeAggregation": "Average",
+          "threshold": 90,
+          "failingPeriods": {
+            "minFailingPeriodsToAlert": 1,
+            "numberOfEvaluationPeriods": 1
+          },
+          "dimensions": [
+            {
+              "operator": "Include",
+              "name": "Computer",
+              "values": [
+                "*"
+              ]
+            }
+          ],
+          "operator": "GreaterThan",
+          "metricMeasureColumn": "Value",
+          "query": "let capacity=datatable(Computer:string,Bytes:real)[\"HV-HOST-01\",68719476736.0,\"SQL2019-GUEST\",12884901888.0,\"WIN2019-GUEST\",8589934592.0,\"WIN2022-GUEST\",8589934592.0,\"WIN2025-GUEST-01\",8589934592.0];\r\nPerf | where ObjectName == \"Memory\" and CounterName == \"Available Bytes\" | summarize Available=avg(CounterValue) by Computer | join kind=inner capacity on Computer | project Computer,Value=100.0*(1-Available/Bytes)"
+        }
+      ]
+    },
+    "actions": {
+      "actionGroups": []
+    },
+    "evaluationFrequency": "PT5M",
+    "displayName": "hv-windows-memory-critical"
+  },
+  "location": "<PRIMARY_REGION>",
+  "name": "hv-windows-memory-critical"
+}

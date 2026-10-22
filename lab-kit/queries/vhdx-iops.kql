@@ -1,0 +1,4 @@
+Perf | where TimeGenerated > ago(30m) and Computer == "HV-HOST-01"
+| where ObjectName == "Hyper-V Virtual Storage Device" and CounterName in ("Read Operations/Sec","Write Operations/Sec") and InstanceName endswith ".vhdx"
+| extend Series=strcat(InstanceName," / ",CounterName)
+| summarize IOPS=avg(CounterValue) by Series,bin(TimeGenerated,1m)

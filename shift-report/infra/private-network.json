@@ -1,0 +1,514 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-05-01",
+      "name": "sthvdisp<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "allowBlobPublicAccess": false,
+        "allowSharedKeyAccess": false,
+        "minimumTlsVersion": "TLS1_2",
+        "supportsHttpsTrafficOnly": true,
+        "accessTier": "Hot",
+        "publicNetworkAccess": "Disabled",
+        "networkAcls": {
+          "bypass": "None",
+          "defaultAction": "Deny"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-05-01",
+      "name": "sthvdisp<SUFFIX>/default/deploy-dispatcher",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', 'sthvdisp<SUFFIX>')]"
+      ],
+      "properties": {
+        "publicAccess": "None"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2024-05-01",
+      "name": "nsg-hv-shift-functions-<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "properties": {
+        "securityRules": []
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2024-05-01",
+      "name": "nsg-hv-shift-operator-<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "properties": {
+        "securityRules": []
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2024-05-01",
+      "name": "pip-hv-shift-operator-<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      }
+    },
+    {
+      "type": "Microsoft.Network/natGateways",
+      "apiVersion": "2024-05-01",
+      "name": "nat-hv-shift-operator-<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "sku": {
+        "name": "Standard"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', 'pip-hv-shift-operator-<SUFFIX>')]"
+      ],
+      "properties": {
+        "idleTimeoutInMinutes": 4,
+        "publicIpAddresses": [
+          {
+            "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'pip-hv-shift-operator-<SUFFIX>')]"
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2024-05-01",
+      "name": "vnet-hv-shift-<SUFFIX>",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/natGateways', 'nat-hv-shift-operator-<SUFFIX>')]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-hv-shift-functions-<SUFFIX>')]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-hv-shift-operator-<SUFFIX>')]"
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.204.0.0/20"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "snet-functions",
+            "properties": {
+              "addressPrefix": "10.204.0.0/26",
+              "delegations": [
+                {
+                  "name": "flex-functions",
+                  "properties": {
+                    "serviceName": "Microsoft.App/environments"
+                  }
+                }
+              ],
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-hv-shift-functions-<SUFFIX>')]"
+              }
+            }
+          },
+          {
+            "name": "snet-private-endpoints",
+            "properties": {
+              "addressPrefix": "10.204.0.64/27",
+              "privateEndpointNetworkPolicies": "Disabled"
+            }
+          },
+          {
+            "name": "snet-operator",
+            "properties": {
+              "addressPrefix": "10.204.1.0/24",
+              "delegations": [
+                {
+                  "name": "operator-containers",
+                  "properties": {
+                    "serviceName": "Microsoft.ContainerInstance/containerGroups"
+                  }
+                }
+              ],
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'nsg-hv-shift-operator-<SUFFIX>')]"
+              },
+              "natGateway": {
+                "id": "[resourceId('Microsoft.Network/natGateways', 'nat-hv-shift-operator-<SUFFIX>')]"
+              }
+            }
+          }
+        ],
+        "virtualNetworkPeerings": []
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones",
+      "apiVersion": "2020-06-01",
+      "name": "privatelink.blob.core.windows.net",
+      "location": "global",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "2020-06-01",
+      "name": "privatelink.blob.core.windows.net/hv-shift-only",
+      "location": "global",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.blob.core.windows.net')]",
+        "[resourceId('Microsoft.Network/virtualNetworks', 'vnet-hv-shift-<SUFFIX>')]"
+      ],
+      "properties": {
+        "registrationEnabled": false,
+        "virtualNetwork": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks', 'vnet-hv-shift-<SUFFIX>')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones",
+      "apiVersion": "2020-06-01",
+      "name": "privatelink.queue.core.windows.net",
+      "location": "global",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "2020-06-01",
+      "name": "privatelink.queue.core.windows.net/hv-shift-only",
+      "location": "global",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.queue.core.windows.net')]",
+        "[resourceId('Microsoft.Network/virtualNetworks', 'vnet-hv-shift-<SUFFIX>')]"
+      ],
+      "properties": {
+        "registrationEnabled": false,
+        "virtualNetwork": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks', 'vnet-hv-shift-<SUFFIX>')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2024-05-01",
+      "name": "pe-hv-shift-host-blob",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'vnet-hv-shift-<SUFFIX>')]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet-hv-shift-<SUFFIX>', 'snet-private-endpoints')]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "reporting-only",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', 'sthvhost<SUFFIX>')]",
+              "groupIds": [
+                "blob"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2024-05-01",
+      "name": "pe-hv-shift-host-blob/default",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateEndpoints', 'pe-hv-shift-host-blob')]",
+        "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.blob.core.windows.net')]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "blob",
+            "properties": {
+              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.blob.core.windows.net')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2024-05-01",
+      "name": "pe-hv-shift-host-queue",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'vnet-hv-shift-<SUFFIX>')]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet-hv-shift-<SUFFIX>', 'snet-private-endpoints')]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "reporting-only",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', 'sthvhost<SUFFIX>')]",
+              "groupIds": [
+                "queue"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2024-05-01",
+      "name": "pe-hv-shift-host-queue/default",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateEndpoints', 'pe-hv-shift-host-queue')]",
+        "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.queue.core.windows.net')]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "queue",
+            "properties": {
+              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.queue.core.windows.net')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2024-05-01",
+      "name": "pe-hv-shift-reports-blob",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'vnet-hv-shift-<SUFFIX>')]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet-hv-shift-<SUFFIX>', 'snet-private-endpoints')]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "reporting-only",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', 'sthvshift<SUFFIX>')]",
+              "groupIds": [
+                "blob"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2024-05-01",
+      "name": "pe-hv-shift-reports-blob/default",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateEndpoints', 'pe-hv-shift-reports-blob')]",
+        "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.blob.core.windows.net')]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "blob",
+            "properties": {
+              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.blob.core.windows.net')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2024-05-01",
+      "name": "pe-hv-shift-reports-queue",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'vnet-hv-shift-<SUFFIX>')]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet-hv-shift-<SUFFIX>', 'snet-private-endpoints')]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "reporting-only",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', 'sthvshift<SUFFIX>')]",
+              "groupIds": [
+                "queue"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2024-05-01",
+      "name": "pe-hv-shift-reports-queue/default",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateEndpoints', 'pe-hv-shift-reports-queue')]",
+        "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.queue.core.windows.net')]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "queue",
+            "properties": {
+              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.queue.core.windows.net')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2024-05-01",
+      "name": "pe-hv-shift-dispatch-blob",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'vnet-hv-shift-<SUFFIX>')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', 'sthvdisp<SUFFIX>')]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet-hv-shift-<SUFFIX>', 'snet-private-endpoints')]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "reporting-only",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', 'sthvdisp<SUFFIX>')]",
+              "groupIds": [
+                "blob"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2024-05-01",
+      "name": "pe-hv-shift-dispatch-blob/default",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateEndpoints', 'pe-hv-shift-dispatch-blob')]",
+        "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.blob.core.windows.net')]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "blob",
+            "properties": {
+              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.blob.core.windows.net')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "apiVersion": "2024-05-01",
+      "name": "pe-hv-shift-dispatch-queue",
+      "location": "<PRIMARY_REGION>",
+      "tags": {
+        "purpose": "hv-shift-private-connectivity"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'vnet-hv-shift-<SUFFIX>')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', 'sthvdisp<SUFFIX>')]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'vnet-hv-shift-<SUFFIX>', 'snet-private-endpoints')]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "reporting-only",
+            "properties": {
+              "privateLinkServiceId": "[resourceId('Microsoft.Storage/storageAccounts', 'sthvdisp<SUFFIX>')]",
+              "groupIds": [
+                "queue"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+      "apiVersion": "2024-05-01",
+      "name": "pe-hv-shift-dispatch-queue/default",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/privateEndpoints', 'pe-hv-shift-dispatch-queue')]",
+        "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.queue.core.windows.net')]"
+      ],
+      "properties": {
+        "privateDnsZoneConfigs": [
+          {
+            "name": "queue",
+            "properties": {
+              "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', 'privatelink.queue.core.windows.net')]"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

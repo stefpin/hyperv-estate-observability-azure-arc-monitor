@@ -1,0 +1,4 @@
+HvLinuxDisk_CL
+| where TimeGenerated > ago(30m)
+| project TimeGenerated,Computer,Device,MountedVolumes,ReadIOPS,WriteIOPS,ReadAwaitMs,WriteAwaitMs,ReadKiBps,WriteKiBps,AvgQueueDepth,IntervalSeconds
+| order by TimeGenerated asc

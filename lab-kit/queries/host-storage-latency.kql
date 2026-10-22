@@ -1,0 +1,4 @@
+Perf | where TimeGenerated > ago(30m) and Computer == "HV-HOST-01"
+| where ObjectName == "PhysicalDisk" and CounterName in ("Avg. Disk sec/Read","Avg. Disk sec/Write") and InstanceName != "_Total"
+| extend Series=strcat(InstanceName," / ",CounterName)
+| summarize LatencyMs=avg(CounterValue)*1000 by Series,bin(TimeGenerated,1m)

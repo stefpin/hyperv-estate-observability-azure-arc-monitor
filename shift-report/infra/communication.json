@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Communication/emailServices",
+      "apiVersion": "2026-03-18",
+      "name": "email-hv-shift-<SUFFIX>",
+      "location": "global",
+      "tags": {
+        "purpose": "hv-shift-health-reporting"
+      },
+      "properties": {
+        "dataLocation": "Asia Pacific"
+      }
+    },
+    {
+      "type": "Microsoft.Communication/emailServices/domains",
+      "apiVersion": "2026-03-18",
+      "name": "email-hv-shift-<SUFFIX>/AzureManagedDomain",
+      "location": "global",
+      "dependsOn": [
+        "[resourceId('Microsoft.Communication/emailServices', 'email-hv-shift-<SUFFIX>')]"
+      ],
+      "properties": {
+        "domainManagement": "AzureManaged",
+        "userEngagementTracking": "Disabled"
+      }
+    },
+    {
+      "type": "Microsoft.Communication/communicationServices",
+      "apiVersion": "2026-03-18",
+      "name": "acs-hv-shift-<SUFFIX>",
+      "location": "global",
+      "tags": {
+        "purpose": "hv-shift-health-reporting"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Communication/emailServices/domains', 'email-hv-shift-<SUFFIX>', 'AzureManagedDomain')]"
+      ],
+      "properties": {
+        "dataLocation": "Asia Pacific",
+        "linkedDomains": [
+          "[resourceId('Microsoft.Communication/emailServices/domains', 'email-hv-shift-<SUFFIX>', 'AzureManagedDomain')]"
+        ],
+        "disableLocalAuth": true
+      }
+    }
+  ]
+}

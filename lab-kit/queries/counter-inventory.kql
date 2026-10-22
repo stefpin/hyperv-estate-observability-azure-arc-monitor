@@ -1,0 +1,5 @@
+Perf
+| where TimeGenerated > ago(30m)
+| where _ResourceId contains "/resourceGroups/rg-hyperv-arc-monitor-demo/"
+| summarize Samples=count(), LastSeen=max(TimeGenerated) by Computer,ObjectName,CounterName,InstanceName
+| order by Computer asc,ObjectName asc,CounterName asc

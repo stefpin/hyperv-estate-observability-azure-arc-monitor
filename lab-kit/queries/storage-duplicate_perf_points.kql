@@ -1,0 +1,1 @@
+Perf | where TimeGenerated > ago(10m) | where _ResourceId has '/resourcegroups/rg-hyperv-arc-monitor-demo/' | where ObjectName in ('PhysicalDisk','LogicalDisk','Hyper-V Virtual Storage Device') | summarize Records=count() by Computer,ObjectName,InstanceName,CounterName,TimeGenerated | where Records>1

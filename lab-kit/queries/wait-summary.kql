@@ -1,0 +1,4 @@
+Perf | where TimeGenerated > ago(30m) and Computer == "HV-HOST-01"
+| where ObjectName == "Hyper-V Hypervisor Virtual Processor" and CounterName == "CPU Wait Time Per Dispatch" and InstanceName contains ":"
+| extend Guest=tostring(split(InstanceName,":")[0])
+| summarize MeanNs=round(avg(CounterValue)),P95Ns=round(percentile(CounterValue,95)),PeakNs=max(CounterValue) by Guest

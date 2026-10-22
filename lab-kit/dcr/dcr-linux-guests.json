@@ -1,0 +1,141 @@
+{
+  "properties": {
+    "dataFlows": [
+      {
+        "destinations": [
+          "law-arc-monitor-lab"
+        ],
+        "streams": [
+          "Microsoft-Perf",
+          "Microsoft-Syslog"
+        ]
+      },
+      {
+        "streams": [
+          "Custom-HvLinuxDiskText"
+        ],
+        "outputStream": "Custom-HvLinuxDisk_CL",
+        "transformKql": "source | extend j=parse_json(substring(RawData,21)) | project TimeGenerated=todatetime(substring(RawData,0,20)), Computer, Device=tostring(j.Device), AccountingScope=tostring(j.AccountingScope), ReadIOPS=toreal(j.ReadIOPS), WriteIOPS=toreal(j.WriteIOPS), ReadAwaitMs=toreal(j.ReadAwaitMs), WriteAwaitMs=toreal(j.WriteAwaitMs), ReadKiBps=toreal(j.ReadKiBps), WriteKiBps=toreal(j.WriteKiBps), AvgQueueDepth=toreal(j.AvgQueueDepth), UtilizationPct=toreal(j.UtilizationPct), IntervalSeconds=toreal(j.IntervalSeconds), MountedVolumes=tostring(j.MountedVolumes), FilePath",
+        "destinations": [
+          "law-arc-monitor-lab"
+        ]
+      }
+    ],
+    "dataSources": {
+      "performanceCounters": [
+        {
+          "counterSpecifiers": [
+            "Processor(*)\\% Processor Time",
+            "Processor(*)\\% Idle Time",
+            "Processor(*)\\% User Time",
+            "Processor(*)\\% Nice Time",
+            "Processor(*)\\% Privileged Time",
+            "Processor(*)\\% IO Wait Time",
+            "Processor(*)\\% Interrupt Time",
+            "Memory(*)\\Available MBytes Memory",
+            "Memory(*)\\% Available Memory",
+            "Memory(*)\\Used Memory MBytes",
+            "Memory(*)\\% Used Memory",
+            "Memory(*)\\Pages/sec",
+            "Memory(*)\\Page Reads/sec",
+            "Memory(*)\\Page Writes/sec",
+            "Memory(*)\\Available MBytes Swap",
+            "Memory(*)\\% Available Swap Space",
+            "Memory(*)\\Used MBytes Swap Space",
+            "Memory(*)\\% Used Swap Space",
+            "Logical Disk(*)\\% Free Inodes",
+            "Logical Disk(*)\\% Used Inodes",
+            "Logical Disk(*)\\Free Megabytes",
+            "Logical Disk(*)\\% Free Space",
+            "Logical Disk(*)\\% Used Space",
+            "Network(*)\\Total Bytes Transmitted",
+            "Network(*)\\Total Bytes Received",
+            "Network(*)\\Total Bytes",
+            "Network(*)\\Total Packets Transmitted",
+            "Network(*)\\Total Packets Received",
+            "Network(*)\\Total Rx Errors",
+            "Network(*)\\Total Tx Errors",
+            "Network(*)\\Total Collisions"
+          ],
+          "name": "perfCountersLinux",
+          "samplingFrequencyInSeconds": 60,
+          "streams": [
+            "Microsoft-Perf"
+          ]
+        }
+      ],
+      "syslog": [
+        {
+          "facilityNames": [
+            "auth",
+            "authpriv",
+            "cron",
+            "daemon",
+            "kern",
+            "syslog"
+          ],
+          "logLevels": [
+            "Warning",
+            "Error",
+            "Critical",
+            "Alert",
+            "Emergency"
+          ],
+          "name": "syslogLinux",
+          "streams": [
+            "Microsoft-Syslog"
+          ]
+        }
+      ],
+      "logFiles": [
+        {
+          "streams": [
+            "Custom-HvLinuxDiskText"
+          ],
+          "format": "text",
+          "name": "hvLinuxDiskText",
+          "filePatterns": [
+            "/var/log/hv-storage/disk-*.log"
+          ],
+          "settings": {
+            "text": {
+              "recordStartTimestampFormat": "ISO 8601"
+            }
+          }
+        }
+      ]
+    },
+    "destinations": {
+      "logAnalytics": [
+        {
+          "name": "law-arc-monitor-lab",
+          "workspaceResourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+        }
+      ]
+    },
+    "streamDeclarations": {
+      "Custom-HvLinuxDiskText": {
+        "columns": [
+          {
+            "name": "TimeGenerated",
+            "type": "datetime"
+          },
+          {
+            "name": "RawData",
+            "type": "string"
+          },
+          {
+            "name": "FilePath",
+            "type": "string"
+          },
+          {
+            "name": "Computer",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  },
+  "location": "<PRIMARY_REGION>",
+  "kind": "Linux"
+}

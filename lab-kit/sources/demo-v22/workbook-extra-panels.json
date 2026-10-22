@@ -1,0 +1,61 @@
+[
+  {
+    "name": "rhel-device-iops",
+    "title": "RHEL block-device read/write IOPS (do not sum LVM aliases)",
+    "query": "HvLinuxDisk_CL | where TimeGenerated {TimeRange} and AccountingScope == 'block-device' | summarize ReadIOPS=avg(ReadIOPS),WriteIOPS=avg(WriteIOPS) by Device,bin(TimeGenerated,{TimeRange:grain})"
+  },
+  {
+    "name": "rhel-device-latency",
+    "title": "RHEL operation-weighted read/write latency (ms; quiet direction is null)",
+    "query": "HvLinuxDisk_CL | where TimeGenerated {TimeRange} and AccountingScope == 'block-device' | extend ReadOps=ReadIOPS*IntervalSeconds,WriteOps=WriteIOPS*IntervalSeconds | summarize ReadOps=sum(ReadOps),WriteOps=sum(WriteOps),ReadWeighted=sum(ReadAwaitMs*ReadOps),WriteWeighted=sum(WriteAwaitMs*WriteOps) by Device,bin(TimeGenerated,{TimeRange:grain}) | extend ReadLatencyMs=iff(ReadOps>0,ReadWeighted/ReadOps,real(null)),WriteLatencyMs=iff(WriteOps>0,WriteWeighted/WriteOps,real(null)) | project TimeGenerated,Device,ReadLatencyMs,WriteLatencyMs"
+  },
+  {
+    "name": "rhel-device-detail",
+    "title": "RHEL storage device to mounted-volume mapping and latest measurements",
+    "visual": "table",
+    "query": "HvLinuxDisk_CL | where TimeGenerated {TimeRange} and AccountingScope == 'block-device' | summarize arg_max(TimeGenerated,*) by Computer,Device | project Computer,Device,MountedVolumes,ReadIOPS,WriteIOPS,ReadAwaitMs,WriteAwaitMs,AvgQueueDepth,UtilizationPct"
+  },
+  {
+    "name": "windows-guest-memory",
+    "title": "Windows physical memory in use per machine (%)",
+    "query": "let capacity=datatable(Computer:string,Bytes:real)['HV-HOST-01',68719476736.0,'SQL2019-GUEST',12884901888.0,'WIN2019-GUEST',8589934592.0,'WIN2022-GUEST',8589934592.0,'WIN2025-GUEST-01',8589934592.0]; Perf | where TimeGenerated {TimeRange} and ObjectName == 'Memory' and CounterName == 'Available Bytes' | summarize Available=avg(CounterValue) by Computer,bin(TimeGenerated,{TimeRange:grain}) | join kind=inner capacity on Computer | project TimeGenerated,Computer,UsedPercent=100.0*(1-Available/Bytes)"
+  },
+  {
+    "name": "rhel-guest-memory",
+    "title": "RHEL guest-reported used memory (%)",
+    "query": "Perf | where TimeGenerated {TimeRange} and Computer == 'RHEL94-GUEST' and ObjectName == 'Memory' and CounterName == '% Used Memory' | summarize UsedPercent=avg(CounterValue) by bin(TimeGenerated,{TimeRange:grain})"
+  },
+  {
+    "name": "cluster-contention",
+    "title": "WIN-CLUSTER-01 scheduling wait per dispatch (nanoseconds)",
+    "query": "Perf | where TimeGenerated {TimeRange} and Computer == 'HV-HOST-01' and ObjectName == 'Hyper-V Hypervisor Virtual Processor' and CounterName == 'CPU Wait Time Per Dispatch' and InstanceName contains ':' | extend Guest=tostring(split(InstanceName,':')[0]) | where Guest in ('WIN2019-GUEST','WIN2022-GUEST','WIN2025-GUEST-01') | summarize MeanWaitNs=avg(CounterValue),P95WaitNs=percentile(CounterValue,95) by bin(TimeGenerated,{TimeRange:grain})"
+  },
+  {
+    "name": "ct-file-changes",
+    "title": "Change Tracking - real reversible file change (Southeast Asia workspace)",
+    "visual": "table",
+    "workspace": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-ct-sea",
+    "query": "ConfigurationChange | where TimeGenerated {TimeRange} and Computer == 'SQL2019-GUEST' | where FileSystemPath contains 'ChangeTracking-v22' | project TimeGenerated,Computer,ConfigChangeType,ChangeCategory,FileSystemPath,FieldsChanged,PreviousFileContentChecksum,FileContentChecksum | order by TimeGenerated desc"
+  },
+  {
+    "name": "ct-sql-services",
+    "title": "Change Tracking - latest SQL service inventory",
+    "visual": "table",
+    "workspace": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-ct-sea",
+    "query": "ConfigurationData | where TimeGenerated {TimeRange} and Computer == 'SQL2019-GUEST' and SvcName in ('MSSQLSERVER','SQLSERVERAGENT','SqlServerExtension') | summarize arg_max(TimeGenerated,*) by SvcName | project TimeGenerated,Computer,SvcName,SvcState,SvcStartupType,SvcAccount"
+  },
+  {
+    "name": "update-assessment",
+    "title": "Update Manager - missing update inventory (SQL Arc guest only)",
+    "visual": "table",
+    "arg": true,
+    "query": "patchassessmentresources | where resourceGroup =~ 'rg-hyperv-arc-monitor-demo' and type contains 'softwarepatches' | extend Machine=tostring(split(id,'/')[8]) | where Machine =~ 'SQL2019-GUEST' | project Machine,Patch=tostring(properties.patchName),KB=tostring(properties.kbId),Classification=properties.classifications,RebootBehavior=tostring(properties.rebootBehavior)"
+  },
+  {
+    "name": "update-history",
+    "title": "Update Manager - actual installation history (not a scheduled-run claim)",
+    "visual": "table",
+    "arg": true,
+    "query": "patchinstallationresources | where resourceGroup =~ 'rg-hyperv-arc-monitor-demo' and type !contains 'softwarepatches' | extend Machine=tostring(split(id,'/')[8]) | where Machine =~ 'SQL2019-GUEST' | project Machine,Status=tostring(properties.status),Installed=toint(properties.installedPatchCount),Failed=toint(properties.failedPatchCount),Excluded=toint(properties.excludedPatchCount),RebootStatus=tostring(properties.rebootStatus),Updated=todatetime(properties.lastModifiedDateTime)"
+  }
+]

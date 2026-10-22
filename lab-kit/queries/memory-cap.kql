@@ -1,0 +1,2 @@
+HvSqlMemory_CL | where TimeGenerated > ago(30m)
+| summarize MaxMemoryMB=avg(MaxMemoryMB),CommittedMB=avg(TotalMemoryMB),ProcessMB=avg(ProcessMB) by bin(TimeGenerated,1m)

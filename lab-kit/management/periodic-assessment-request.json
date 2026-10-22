@@ -1,0 +1,11 @@
+{
+    "properties":  {
+                       "osProfile":  {
+                                         "windowsConfiguration":  {
+                                                                      "patchSettings":  {
+                                                                                            "assessmentMode":  "AutomaticByPlatform"
+                                                                                        }
+                                                                  }
+                                     }
+                   }
+}

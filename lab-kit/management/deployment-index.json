@@ -1,0 +1,7 @@
+[
+  {
+    "resourceId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.Insights/dataCollectionRules/dcr-sql2019-change-tracking",
+    "file": "ct-dcr-request.json",
+    "apiVersion": "2023-03-11"
+  }
+]

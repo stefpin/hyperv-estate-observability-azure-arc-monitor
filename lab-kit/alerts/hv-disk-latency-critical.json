@@ -1,0 +1,57 @@
+{
+  "properties": {
+    "windowSize": "PT5M",
+    "autoMitigate": true,
+    "description": "Demo: operational starting threshold. Notifications are attached separately (see docs/setup/19-alerts.md).",
+    "enabled": true,
+    "severity": 1,
+    "scopes": [
+      "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+    ],
+    "criteria": {
+      "allOf": [
+        {
+          "timeAggregation": "Average",
+          "threshold": 50,
+          "failingPeriods": {
+            "minFailingPeriodsToAlert": 1,
+            "numberOfEvaluationPeriods": 1
+          },
+          "dimensions": [
+            {
+              "operator": "Include",
+              "name": "Computer",
+              "values": [
+                "*"
+              ]
+            },
+            {
+              "operator": "Include",
+              "name": "ObjectName",
+              "values": [
+                "*"
+              ]
+            },
+            {
+              "operator": "Include",
+              "name": "InstanceName",
+              "values": [
+                "*"
+              ]
+            }
+          ],
+          "operator": "GreaterThan",
+          "metricMeasureColumn": "Value",
+          "query": "let latency=Perf | where ObjectName in (\"PhysicalDisk\",\"LogicalDisk\") and InstanceName != \"_Total\" and CounterName == \"Avg. Disk sec/Transfer\" | summarize Value=avg(CounterValue)*1000 by Computer,ObjectName,InstanceName;\r\nlet activity=Perf | where ObjectName in (\"PhysicalDisk\",\"LogicalDisk\") and InstanceName != \"_Total\" and CounterName == \"Disk Transfers/sec\" | summarize IOPS=avg(CounterValue) by Computer,ObjectName,InstanceName;\r\nlatency | join kind=inner activity on Computer,ObjectName,InstanceName | where IOPS > 1 | project Computer,ObjectName,InstanceName,Value"
+        }
+      ]
+    },
+    "actions": {
+      "actionGroups": []
+    },
+    "evaluationFrequency": "PT5M",
+    "displayName": "hv-disk-latency-critical"
+  },
+  "location": "<PRIMARY_REGION>",
+  "name": "hv-disk-latency-critical"
+}

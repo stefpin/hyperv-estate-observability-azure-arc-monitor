@@ -1,0 +1,3 @@
+HvSqlMemory_CL | where TimeGenerated > ago(30m)
+| summarize arg_max(GrantAllocatedMB,GrantUsedMB) by bin(TimeGenerated,1m)
+| project TimeGenerated,GrantedMB=GrantAllocatedMB,UsedMB=GrantUsedMB

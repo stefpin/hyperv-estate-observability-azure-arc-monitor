@@ -1,0 +1,1 @@
+Perf | where TimeGenerated > ago(30m) and Computer == 'RHEL94-GUEST' and ObjectName == 'Memory' and CounterName == '% Used Memory' | summarize UsedPercent=avg(CounterValue) by bin(TimeGenerated,1m)

@@ -1,0 +1,5 @@
+Perf | where TimeGenerated > ago(30m)
+| where Computer in ("WIN2019-GUEST","WIN2022-GUEST","WIN2025-GUEST-01")
+| where ObjectName == "Memory" and CounterName == "Available Bytes"
+| summarize UsedPercent=100.0*(1-avg(CounterValue)/8589934592.0) by Computer,bin(TimeGenerated,1m)
+| summarize ClusterMemory=avg(UsedPercent),BusiestMemberMemory=max(UsedPercent) by TimeGenerated

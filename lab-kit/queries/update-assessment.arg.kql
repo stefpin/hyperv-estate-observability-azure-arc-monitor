@@ -1,0 +1,1 @@
+patchassessmentresources | where resourceGroup =~ 'rg-hyperv-arc-monitor-demo' and type contains 'softwarepatches' | extend Machine=tostring(split(id,'/')[8]) | where Machine =~ 'SQL2019-GUEST' | project Machine,Patch=tostring(properties.patchName),KB=tostring(properties.kbId),Classification=properties.classifications,RebootBehavior=tostring(properties.rebootBehavior)

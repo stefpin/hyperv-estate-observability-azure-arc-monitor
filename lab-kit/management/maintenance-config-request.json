@@ -1,0 +1,31 @@
+{
+  "properties": {
+    "maintenanceWindow": {
+      "duration": "01:30",
+      "timeZone": "SE Asia Standard Time",
+      "recurEvery": "Week Monday",
+      "startDateTime": "2027-01-04 19:00",
+      "expirationDateTime": "2027-02-12 23:59"
+    },
+    "visibility": "Custom",
+    "installPatches": {
+      "rebootSetting": "Never",
+      "windowsParameters": {
+        "kbNumbersToInclude": [
+          "2267602"
+        ],
+        "classificationsToInclude": [],
+        "kbNumbersToExclude": [],
+        "excludeKbsRequiringReboot": true
+      }
+    },
+    "maintenanceScope": "InGuestPatch",
+    "extensionProperties": {
+      "InGuestPatchMode": "User"
+    }
+  },
+  "tags": {
+    "purpose": "HV-demo"
+  },
+  "location": "southeastasia"
+}

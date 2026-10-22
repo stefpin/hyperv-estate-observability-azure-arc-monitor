@@ -1,0 +1,39 @@
+# Private lab settings and secrets - never commit
+ENVIRONMENT.txt
+*.env
+*.pfx
+*.pem
+*.key
+*.publishsettings
+local.settings.json
+
+# Output written by the lab-kit scripts at run time (Azure responses, evidence, exports)
+reports-output/
+lab-kit/exports/
+lab-kit/alerts/put-*.json
+lab-kit/workbook-put.json
+lab-kit/storage/*.json
+lab-kit/storage/*.kql
+lab-kit/sources/demo-v22/*.json
+!lab-kit/sources/demo-v22/workbook-extra-panels.json
+!lab-kit/sources/demo-v22/workbook-queries.json
+!lab-kit/sources/demo-v22/workbook-resource.json
+lab-kit/sources/sql-install/protected-staging/
+lab-kit/management/evidence/
+lab-kit/management/*.json
+!lab-kit/management/*-request.json
+!lab-kit/management/CT-TABLE-SCHEMAS.json
+!lab-kit/management/deployment-index.json
+lab-kit/email/*.json
+
+# Python / editor / OS noise
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.test-deps/
+.pytest_cache/
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

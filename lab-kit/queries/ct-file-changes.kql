@@ -1,0 +1,1 @@
+ConfigurationChange | where TimeGenerated > ago(30m) and Computer == 'SQL2019-GUEST' | where FileSystemPath contains 'ChangeTracking-v22' | project TimeGenerated,Computer,ConfigChangeType,ChangeCategory,FileSystemPath,FieldsChanged,PreviousFileContentChecksum,FileContentChecksum | order by TimeGenerated desc

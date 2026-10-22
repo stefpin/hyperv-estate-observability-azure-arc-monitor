@@ -1,0 +1,147 @@
+{
+    "properties":  {
+                       "streamDeclarations":  {
+                                                  "Custom-HvSqlMemory":  {
+                                                                              "columns":  [
+                                                                                              {
+                                                                                                  "name":  "TimeGenerated",
+                                                                                                  "type":  "datetime"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "Computer",
+                                                                                                  "type":  "string"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "Instance",
+                                                                                                  "type":  "string"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "Stage",
+                                                                                                  "type":  "string"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "MaxMemoryMB",
+                                                                                                  "type":  "real"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "TotalMemoryMB",
+                                                                                                  "type":  "real"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "FreeMemoryMB",
+                                                                                                  "type":  "real"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "CacheMemoryMB",
+                                                                                                  "type":  "real"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "StolenMemoryMB",
+                                                                                                  "type":  "real"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "GrantAllocatedMB",
+                                                                                                  "type":  "real"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "GrantUsedMB",
+                                                                                                  "type":  "real"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "GrantCount",
+                                                                                                  "type":  "real"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "PendingGrants",
+                                                                                                  "type":  "real"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "ProcessMB",
+                                                                                                  "type":  "real"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "OsAvailableMB",
+                                                                                                  "type":  "real"
+                                                                                              },
+                                                                                              {
+                                                                                                  "name":  "PhysicalMB",
+                                                                                                  "type":  "real"
+                                                                                              }
+                                                                                          ]
+                                                                          }
+                                              },
+                       "description":  "SQL memory manager counters and aggregate query workspace grants; no query text.",
+                       "dataSources":  {
+                                           "performanceCounters":  [
+                                                                       {
+                                                                           "counterSpecifiers":  [
+                                                                                                     "\\SQLServer:Memory Manager\\Total Server Memory (KB)",
+                                                                                                     "\\SQLServer:Memory Manager\\Target Server Memory (KB)",
+                                                                                                     "\\SQLServer:Memory Manager\\Free Memory (KB)",
+                                                                                                     "\\SQLServer:Memory Manager\\Database Cache Memory (KB)",
+                                                                                                     "\\SQLServer:Memory Manager\\Stolen Server Memory (KB)",
+                                                                                                     "\\SQLServer:Memory Manager\\Granted Workspace Memory (KB)",
+                                                                                                     "\\SQLServer:Memory Manager\\Memory Grants Pending",
+                                                                                                     "\\SQLServer:Memory Manager\\Memory Grants Outstanding",
+                                                                                                     "\\SQLServer:Memory Manager\\Reserved Server Memory (KB)",
+                                                                                                     "\\SQLServer:Buffer Manager\\Page life expectancy",
+                                                                                                     "\\SQLServer:Buffer Manager\\Page reads/sec",
+                                                                                                     "\\SQLServer:Buffer Manager\\Page writes/sec",
+                                                                                                     "\\SQLServer:SQL Statistics\\Batch Requests/sec",
+                                                                                                     "\\SQLServer:General Statistics\\User Connections",
+                                                                                                     "\\Process(sqlservr)\\% Processor Time",
+                                                                                                     "\\Process(sqlservr)\\Working Set - Private",
+                                                                                                     "\\Process(sqlservr)\\Private Bytes"
+                                                                                                 ],
+                                                                           "streams":  [
+                                                                                           "Microsoft-Perf"
+                                                                                       ],
+                                                                           "samplingFrequencyInSeconds":  15,
+                                                                           "name":  "sqlCounters"
+                                                                       }
+                                                                   ],
+                                           "logFiles":  [
+                                                            {
+                                                                "streams":  [
+                                                                                "Custom-HvSqlMemory"
+                                                                            ],
+                                                                "format":  "json",
+                                                                "name":  "sqlMemoryJson",
+                                                                "filePatterns":  [
+                                                                                     "C:\\HV-Demo\\logs\\sql-memory-*.json"
+                                                                                 ]
+                                                            }
+                                                        ]
+                                       },
+                       "dataFlows":  [
+                                         {
+                                             "destinations":  [
+                                                                  "hv"
+                                                              ],
+                                             "streams":  [
+                                                             "Microsoft-Perf"
+                                                         ]
+                                         },
+                                         {
+                                             "streams":  [
+                                                             "Custom-HvSqlMemory"
+                                                         ],
+                                             "outputStream":  "Custom-HvSqlMemory_CL",
+                                             "transformKql":  "source",
+                                             "destinations":  [
+                                                                  "hv"
+                                                              ]
+                                         }
+                                     ],
+                       "destinations":  {
+                                            "logAnalytics":  [
+                                                                 {
+                                                                     "name":  "hv",
+                                                                     "workspaceResourceId":  "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+                                                                 }
+                                                             ]
+                                        }
+                   },
+    "location":  "<PRIMARY_REGION>",
+    "kind":  "Windows"
+}

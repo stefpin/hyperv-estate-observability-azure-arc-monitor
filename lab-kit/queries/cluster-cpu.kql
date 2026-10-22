@@ -1,0 +1,5 @@
+Perf | where TimeGenerated > ago(30m)
+| where Computer in ("WIN2019-GUEST","WIN2022-GUEST","WIN2025-GUEST-01")
+| where ObjectName == "Processor Information" and CounterName == "% Processor Time" and InstanceName == "_Total"
+| summarize MemberCPU=avg(CounterValue) by Computer,bin(TimeGenerated,1m)
+| summarize ClusterCPU=avg(MemberCPU),BusiestMemberCPU=max(MemberCPU) by TimeGenerated

@@ -1,0 +1,75 @@
+{
+    "properties":  {
+                       "retentionInDays":  30,
+                       "totalRetentionInDays":  30,
+                       "schema":  {
+                                      "name":  "HvSqlMemory_CL",
+                                      "columns":  [
+                                                      {
+                                                          "name":  "TimeGenerated",
+                                                          "type":  "datetime"
+                                                      },
+                                                      {
+                                                          "name":  "Computer",
+                                                          "type":  "string"
+                                                      },
+                                                      {
+                                                          "name":  "Instance",
+                                                          "type":  "string"
+                                                      },
+                                                      {
+                                                          "name":  "Stage",
+                                                          "type":  "string"
+                                                      },
+                                                      {
+                                                          "name":  "MaxMemoryMB",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "TotalMemoryMB",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "FreeMemoryMB",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "CacheMemoryMB",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "StolenMemoryMB",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "GrantAllocatedMB",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "GrantUsedMB",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "GrantCount",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "PendingGrants",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "ProcessMB",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "OsAvailableMB",
+                                                          "type":  "real"
+                                                      },
+                                                      {
+                                                          "name":  "PhysicalMB",
+                                                          "type":  "real"
+                                                      }
+                                                  ]
+                                  }
+                   }
+}

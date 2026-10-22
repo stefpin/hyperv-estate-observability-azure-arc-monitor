@@ -1,0 +1,34 @@
+{
+  "properties": {
+    "windowSize": "PT10M",
+    "autoMitigate": true,
+    "description": "Demo: operational starting threshold. Notifications are attached separately (see docs/setup/19-alerts.md).",
+    "enabled": true,
+    "severity": 2,
+    "scopes": [
+      "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-hyperv-arc-monitor-demo/providers/Microsoft.OperationalInsights/workspaces/law-arc-monitor-lab"
+    ],
+    "criteria": {
+      "allOf": [
+        {
+          "timeAggregation": "Average",
+          "threshold": 80,
+          "failingPeriods": {
+            "minFailingPeriodsToAlert": 1,
+            "numberOfEvaluationPeriods": 1
+          },
+          "operator": "GreaterThan",
+          "metricMeasureColumn": "Value",
+          "query": "Perf | where Computer in (\"WIN2019-GUEST\",\"WIN2022-GUEST\",\"WIN2025-GUEST-01\") and ObjectName == \"Processor Information\" and CounterName == \"% Processor Time\" and InstanceName == \"_Total\" | summarize MemberCPU=avg(CounterValue) by Computer | summarize Value=avg(MemberCPU)"
+        }
+      ]
+    },
+    "actions": {
+      "actionGroups": []
+    },
+    "evaluationFrequency": "PT5M",
+    "displayName": "hv-cluster-cpu-high"
+  },
+  "location": "<PRIMARY_REGION>",
+  "name": "hv-cluster-cpu-high"
+}
